@@ -1,0 +1,4 @@
+interface:
+  display_name: "TerraFlow Auth Audit"
+  short_description: "Verify TerraFlow authentication"
+  default_prompt: "Use $terraflow-auth-audit to verify TerraFlow authentication."

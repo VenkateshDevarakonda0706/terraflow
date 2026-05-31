@@ -1,0 +1,4 @@
+interface:
+  display_name: "TerraFlow Feature Audit"
+  short_description: "Assess feature completeness"
+  default_prompt: "Use $terraflow-feature-audit to assess this TerraFlow feature."

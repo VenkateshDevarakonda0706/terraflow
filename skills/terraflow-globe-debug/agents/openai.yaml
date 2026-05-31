@@ -1,0 +1,4 @@
+interface:
+  display_name: "TerraFlow Globe Debug"
+  short_description: "Debug Cesium globe issues"
+  default_prompt: "Use $terraflow-globe-debug to diagnose the TerraFlow globe issue."

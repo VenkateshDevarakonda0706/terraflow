@@ -1,0 +1,4 @@
+interface:
+  display_name: "TerraFlow UI Review"
+  short_description: "Audit TerraFlow visual quality"
+  default_prompt: "Use $terraflow-ui-review to audit the current TerraFlow interface."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "TerraFlow Performance Review"
+  short_description: "Optimize TerraFlow performance"
+  default_prompt: "Use $terraflow-performance-review to measure and improve TerraFlow performance."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "TerraFlow UX Review"
+  short_description: "Audit TerraFlow user experience"
+  default_prompt: "Use $terraflow-ux-review to assess this TerraFlow user flow."

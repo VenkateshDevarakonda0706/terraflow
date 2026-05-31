@@ -1,0 +1,4 @@
+interface:
+  display_name: "TerraFlow Security Review"
+  short_description: "Validate TerraFlow security"
+  default_prompt: "Use $terraflow-security-review to audit TerraFlow security."

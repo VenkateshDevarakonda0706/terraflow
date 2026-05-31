@@ -1,0 +1,4 @@
+interface:
+  display_name: "TerraFlow Product Principles"
+  short_description: "Protect TerraFlow product identity"
+  default_prompt: "Use $terraflow-product-principles to evaluate this TerraFlow product decision."

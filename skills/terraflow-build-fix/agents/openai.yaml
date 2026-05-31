@@ -1,0 +1,4 @@
+interface:
+  display_name: "TerraFlow Build Fix"
+  short_description: "Troubleshoot TerraFlow builds"
+  default_prompt: "Use $terraflow-build-fix to diagnose and fix the TerraFlow build."

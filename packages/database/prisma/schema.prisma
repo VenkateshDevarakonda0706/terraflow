@@ -1,0 +1,243 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+enum Visibility {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum CapsuleStatus {
+  LOCKED
+  UNLOCKED
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  RESOLVED
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String?   // Nullable for OAuth accounts
+  name          String
+  bio           String?   @db.VarChar(500)
+  profilePic    String?   // CDN URL
+  role          String    @default("USER") // USER, ADMIN, MODERATOR
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  posts            Post[]
+  comments         Comment[]
+  likes            Like[]
+  saves            SavedPost[]
+  memoryCapsules   MemoryCapsule[]
+  sentMessages     Message[]    @relation("Sender")
+  receivedMessages Message[]    @relation("Recipient")
+  notifications    Notification[]
+  reportsCreated   Report[]     @relation("Reporter")
+  reportsAgainst   Report[]     @relation("ReportedUser")
+  
+  // Follows
+  followers        Follow[]     @relation("FollowingUser")
+  following        Follow[]     @relation("FollowerUser")
+  
+  // Cacheable Travel Statistics
+  travelStats      TravelStats?
+
+  @@index([username])
+  @@index([email])
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower    User @relation("FollowerUser", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User @relation("FollowingUser", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model Post {
+  id           String      @id @default(uuid())
+  userId       String
+  title        String      @db.VarChar(100)
+  description  String?     @db.VarChar(1000)
+  latitude     Float
+  longitude    Float
+  h3Index      String      @db.VarChar(15) // Uber H3 Index (resolution 8) for spatial indexing
+  tags         String[]    // Array of tags (e.g., travel, food)
+  visibility   Visibility  @default(PUBLIC)
+  isModerated  Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media        Media[]
+  comments     Comment[]
+  likes        Like[]
+  savedBy      SavedPost[]
+  reports      Report[]
+
+  @@index([userId])
+  @@index([latitude, longitude, visibility])
+  @@index([h3Index, visibility, createdAt(sort: Desc)])
+}
+
+model Media {
+  id        String    @id @default(uuid())
+  postId    String
+  url       String    // CDN URL
+  type      MediaType @default(IMAGE)
+  width     Int?
+  height    Int?
+  order     Int       @default(0) // Order within albums
+  createdAt DateTime  @default(now())
+
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  content   String   @db.VarChar(500)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([userId])
+}
+
+model Like {
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model SavedPost {
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model MemoryCapsule {
+  id           String        @id @default(uuid())
+  userId       String
+  title        String        @db.VarChar(100)
+  description  String?       @db.VarChar(1000)
+  latitude     Float
+  longitude    Float
+  mediaUrl     String        // Encrypted asset url
+  unlockDate   DateTime
+  status       CapsuleStatus @default(LOCKED)
+  createdAt    DateTime      @default(now())
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([unlockDate])
+}
+
+model TravelStats {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  countriesVisited   String[] // ISO codes e.g. ["US", "FR", "IN"]
+  citiesVisited      String[] // Unique names/geoNamesIds e.g. ["Paris", "Delhi"]
+  totalDistanceKm    Float    @default(0.0)
+  travelStreak       Int      @default(0)
+  unlockedBadges     String[] // Badge identifiers e.g. ["GLOBETROTTER", "EXPLORER"]
+  updatedAt          DateTime @updatedAt
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  senderId    String
+  recipientId String
+  content     String   @db.VarChar(2000)
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  sender      User     @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User     @relation("Recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, recipientId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  message     String
+  isRead      Boolean  @default(false)
+  type        String   // LIKE, COMMENT, FOLLOW, CAPSULE_UNLOCK, SYSTEM
+  referenceId String?  // ID pointing to Post, Comment, User, or Capsule
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Report {
+  id             String       @id @default(uuid())
+  reporterId     String
+  postId         String?
+  reportedUserId String?
+  reason         String       @db.VarChar(500)
+  status         ReportStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  reporter       User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  post           Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reportedUser   User?        @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([status])
+}

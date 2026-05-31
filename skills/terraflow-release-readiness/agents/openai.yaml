@@ -1,0 +1,4 @@
+interface:
+  display_name: "TerraFlow Release Readiness"
+  short_description: "Assess production readiness"
+  default_prompt: "Use $terraflow-release-readiness to decide whether TerraFlow is production-ready."
