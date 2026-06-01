@@ -1,5 +1,6 @@
 {
   "name": "@terraflow/api",
+  "description": "The NestJS back-end API application for TerraFlow, handling JWT session persistence, multi-part geocoding media uploads, dynamic privacy shields, and spatial explore clustering.",
   "version": "1.0.0",
   "private": true,
   "scripts": {

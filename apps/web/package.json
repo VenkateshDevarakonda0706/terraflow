@@ -1,5 +1,6 @@
 {
   "name": "@terraflow/web",
+  "description": "The Next.js front-end application for TerraFlow, featuring an interactive 3D WebGL globe, reverse-geocoding post modals, and floating travel stats HUD dashboards.",
   "version": "1.0.0",
   "private": true,
   "scripts": {

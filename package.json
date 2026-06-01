@@ -1,5 +1,6 @@
 {
   "name": "terraflow-monorepo",
+  "description": "TerraFlow — The Memory Layer of Earth. A premium WebGL 3D globe monorepo for mapping, exploring, and sharing physical travel memories.",
   "version": "1.0.0",
   "private": true,
   "workspaces": [

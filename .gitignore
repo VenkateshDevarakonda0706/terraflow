@@ -42,3 +42,7 @@ Thumbs.db
 # Database/Prisma local databases or sqlite
 *.db
 *.sqlite
+
+# Local development uploads
+apps/api/public/uploads/*
+!apps/api/public/uploads/.gitkeep

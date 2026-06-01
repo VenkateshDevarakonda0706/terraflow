@@ -1,99 +1,139 @@
-# TerraFlow — The Memory Layer of Earth 🌍
+# TerraFlow
 
-TerraFlow is a premium, consumer-focused WebGL 3D globe application designed for mapping, exploring, and sharing physical memories across the globe. By embedding traveler memories onto a fully interactive virtual Earth, TerraFlow transforms geolocated discoveries into a beautiful, immersive journey.
+TerraFlow is the Memory Layer of Earth: a premium, exploration-first WebGL globe for discovering, mapping, and sharing physical memories. The product centers on a full-screen Cesium globe, public discovery before login, and lightweight publishing when a traveler is ready to pin a story to a place.
 
----
+## Features
 
-## 🚀 Core Features
+- Full-screen interactive 3D globe powered by Cesium.
+- Guest exploration with featured public memories and search-driven globe navigation.
+- Email and Google OAuth authentication for publishing and profile features.
+- Geolocated media uploads with local filesystem fallback and optional Google Cloud Storage.
+- Public, friends-only, and private memory visibility controls.
+- Spatial explore API with H3 clustering for globe-scale discovery.
+- Profile, save, follow, social, notification, and messaging data models ready for expansion.
 
-* **Interactive WebGL 3D Globe**: Rendered via Cesium, utilizing real-time geographic coordinates, responsive custom billboard pins, and fast fly-to viewport orbits.
-* **Persistent Session Authentication**: Seamless email register/login and Google OAuth integrations. Auth sessions persist across refreshes using secure JWT local storage.
-* **Geolocated Media Uploads**: Fast, multipart file uploading directly to local/cloud storage, parsing location metadata dynamically.
-* **Reverse Geocoding**: Integrated with OpenStreetMap Nominatim for free forward/reverse location tagging, converting click coordinates to actual place names.
-* **Granular Privacy & Visibility shields**: Support for `PUBLIC` (visible to everyone), `FRIENDS` (visible to followers), and `PRIVATE` (only you) memories.
-* **Traveler Dashboard & Grid**: Floating high-contrast HUD showing real-time statistics like countries visited, cities visited, streak count, and km traveled.
+## Screenshots
 
----
+Add screenshots before launch:
 
-## 📂 Architecture
+- `docs/screenshots/globe-home-desktop.png`
+- `docs/screenshots/globe-home-mobile.png`
+- `docs/screenshots/upload-memory.png`
+- `docs/screenshots/profile-panel.png`
 
-TerraFlow is built as a lightweight TypeScript monorepo structured for optimal workspace scalability:
+## Tech Stack
 
-```
-├── apps/
-│   ├── web/          # Next.js 15 Front-End (Cesium, TailwindCSS, CSS Glassmorphism)
-│   └── api/          # NestJS Server (Express, Passport JWT, Sharp, class-validator)
-├── packages/
-│   ├── database/     # Prisma Client, migrations, and PostgreSQL schema definitions
-│   └── shared/       # Shared TS typings and global constant fields
-└── skills/           # Project-level design, product, QA, and security validation skills
-```
+- Monorepo: npm workspaces
+- Web: Next.js, React, TypeScript, Tailwind CSS, Cesium
+- API: NestJS, Passport, JWT, Socket.IO, BullMQ
+- Database: PostgreSQL, Prisma
+- Storage: local uploads or Google Cloud Storage
 
----
+## Architecture
 
-## 🛠️ Getting Started
-
-### 1. Prerequisites
-Ensure you have the following installed on your system:
-* **Node.js**: `v18.x` or later
-* **npm**: `v9.x` or later
-* **PostgreSQL**: Local or hosted database instance
-
-### 2. Environment Configuration
-Create a `.env` file in the monorepo root (copy from `.env.example` if present) with your credentials:
-
-```ini
-# API Configurations
-PORT=4000
-DATABASE_URL="postgresql://username:password@localhost:5432/terraflow_db?schema=public"
-
-# Auth Tokens (JWT)
-JWT_SECRET="your-super-secure-jwt-secret-key"
-JWT_REFRESH_SECRET="your-super-secure-jwt-refresh-key"
-
-# Social Auth
-CLIENT_URL="http://localhost:3000"
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-GOOGLE_CALLBACK_URL="http://localhost:4000/api/v1/auth/google/callback"
+```text
+apps/
+  web/              Next.js app, Cesium globe, upload and profile UI
+  api/              NestJS API, auth, posts, social graph, gateway, worker
+packages/
+  database/         Prisma schema and generated database client entrypoint
+  shared/           Shared TypeScript types and constants
+docs/               Product and contributor documentation
+skills/             TerraFlow project review and QA instructions
 ```
 
-### 3. Database Generation
-Generate the Prisma schema client and migrate your schema:
+The user journey should keep Earth as the primary surface. Guests can explore first; account creation appears only when a user uploads, saves, follows, or manages a profile.
+
+## Prerequisites
+
+- Node.js 18 or newer
+- npm 9 or newer
+- PostgreSQL 14 or newer
+- Optional: Redis for worker-backed flows
+- Optional: Google Cloud Storage credentials for production media storage
+
+On Windows PowerShell, use `npm.cmd` if `npm` is blocked by script execution policy.
+
+## Installation
+
 ```bash
-# Generate Prisma Client
-npm run db:generate
+git clone https://github.com/<your-org>/terraflow.git
+cd terraflow
+npm install
+cp .env.example .env
+```
 
-# Push schema changes to your database
+Edit `.env` with local values. At minimum, set `DATABASE_URL`, `JWT_SECRET`, and `JWT_REFRESH_SECRET`.
+
+## Environment Variables
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `PORT` | Yes | API port, usually `4000`. |
+| `CLIENT_URL` | Yes | Web origin, usually `http://localhost:3000`. |
+| `DATABASE_URL` | Yes | PostgreSQL connection string for Prisma. |
+| `JWT_SECRET` | Yes | Access token signing secret. Use a long random value. |
+| `JWT_REFRESH_SECRET` | Yes | Refresh token signing secret. Use a different long random value. |
+| `NEXT_PUBLIC_API_URL` | No | Web app API base URL. Defaults to `http://localhost:4000/api/v1`. |
+| `GOOGLE_CLIENT_ID` | No | Google OAuth client ID. |
+| `GOOGLE_CLIENT_SECRET` | No | Google OAuth client secret. |
+| `GOOGLE_CALLBACK_URL` | No | Google OAuth callback URL. |
+| `GOOGLE_APPLICATION_CREDENTIALS` | No | Path to a GCS service account JSON file. |
+| `GCS_BUCKET_NAME` | No | Google Cloud Storage bucket name. |
+| `API_PUBLIC_URL` | No | Public API origin used for local upload URLs. |
+| `REDIS_URL` | No | Redis connection string for worker features. |
+
+## Database Setup
+
+```bash
+npm run db:generate
 npm run db:push
 ```
 
-### 4. Running the Development Workspace
-Start both the back-end API server and the front-end dev application in parallel:
-```bash
-# Run API (NestJS) on http://localhost:4000
-npm run dev:api
+## Local Development
 
-# Run Web App (Next.js) on http://localhost:3000
+Run the API and web app in separate terminals:
+
+```bash
+npm run dev:api
 npm run dev:web
 ```
 
-### 5. Compiling for Production
-To generate optimized production bundles:
+Open `http://localhost:3000`.
+
+The API runs at `http://localhost:4000` by default. Uploaded local files are served from `http://localhost:4000/uploads`.
+
+## Verification
+
 ```bash
-# Run monorepo production build
 npm run build
 ```
 
----
+Current audit evidence: `npm.cmd run build` passes on Windows PowerShell as of 2026-06-01. The repository does not yet expose a root test or lint script.
 
-## 🔒 Security & Performance Guidelines
-* **Rate Limiting**: Global API protection mapping a max of 120 requests/minute per IP address via NestJS Throttler.
-* **XSS Protections**: Global Sanitizer Interceptor filters HTML, raw scripts, and SQL payload vectors from incoming requests.
-* **Strict Validation**: Rigid schema validations using `class-validator` payload decorators.
-* **Prisma Performance**: Clean, index-optimised queries for spatial explore viewports (clustering).
+## Contributing
 
----
+Start with [CONTRIBUTING.md](./CONTRIBUTING.md), then review [docs/OPEN_SOURCE_ISSUES.md](./docs/OPEN_SOURCE_ISSUES.md) for ready-to-publish issues. Good first issues are scoped for first-time contributors and should include clear acceptance criteria.
 
-## 📄 License
-This project is licensed under private terms. All rights reserved.
+Before opening a pull request:
+
+- Keep the globe central and preserve exploration before login.
+- Add or update tests for behavior changes when practical.
+- Run `npm run build`.
+- Include screenshots for UI changes.
+- Avoid unrelated refactors in the same PR.
+
+## Roadmap
+
+- Add root lint and test commands for contributor confidence.
+- Replace placeholder EXIF geocoding with real GPS parsing.
+- Add API pagination metadata and validation coverage.
+- Improve mobile globe and upload accessibility.
+- Add public demo seed data and screenshots.
+- Add CI for build, tests, formatting, and type checks.
+- Expand moderation, reporting, and abuse prevention flows.
+- Add performance budgets for Cesium assets and route bundles.
+
+## License
+
+TerraFlow is licensed under the GNU General Public License v3.0. See [LICENSE](./LICENSE).
