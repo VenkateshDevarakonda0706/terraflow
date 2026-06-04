@@ -49,6 +49,26 @@ Recommended first contributions:
 - Focused tests around existing services
 - Minor UI polish with screenshots
 
+## Issue Triage and Claiming Work
+
+Use labels to find work that matches your experience and the area you want to
+improve:
+
+- `good first issue` and `beginner` for small, self-contained starter tasks
+- `help wanted` when maintainers are actively inviting outside help
+- `documentation`, `frontend`, `backend`, `testing`, `ui/ux`, `performance`,
+  and `security` to filter by project area
+- `blocked` and `needs reproduction` to spot issues that may need maintainer
+  follow-up before code changes are useful
+
+Before you start coding, leave a comment on the issue so maintainers and other
+contributors know you plan to work on it. If the issue is already assigned or a
+recent contributor comment shows someone is actively working on it, wait for a
+maintainer response before opening a pull request.
+
+Keep first pull requests tightly scoped. One issue, one focused change, and one
+clear verification path are easier to review and merge.
+
 ## Pull Request Checklist
 
 - [ ] The PR has a clear title and short summary.
@@ -89,3 +109,8 @@ Do not open public issues for vulnerabilities. Email or privately contact the ma
 ## Maintainer Response Expectations
 
 Maintainers should review beginner PRs with actionable feedback, explain requested changes, and avoid expanding the scope after the PR is opened unless a correctness or safety issue requires it.
+
+When triaging beginner-friendly issues, maintainers should confirm whether an
+issue is still available, point contributors to the right labels or files when
+needed, and keep review requests specific enough that a new contributor can act
+on them without guessing.
