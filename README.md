@@ -12,14 +12,7 @@ TerraFlow is the Memory Layer of Earth: a premium, exploration-first WebGL globe
 - Spatial explore API with H3 clustering for globe-scale discovery.
 - Profile, save, follow, social, notification, and messaging data models ready for expansion.
 
-## Screenshots
 
-Add screenshots before launch:
-
-- `docs/screenshots/globe-home-desktop.png`
-- `docs/screenshots/globe-home-mobile.png`
-- `docs/screenshots/upload-memory.png`
-- `docs/screenshots/profile-panel.png`
 
 ## Tech Stack
 
