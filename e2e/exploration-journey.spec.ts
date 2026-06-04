@@ -259,7 +259,11 @@ async function loadAuthenticatedPage(page: Page) {
   });
 
   await page.route('**/api/v1/posts', route => {
-    route.fulfill({ json: publishedPost });
+    if (route.request().method() === 'POST') {
+      route.fulfill({ json: publishedPost });
+    } else {
+      route.continue();
+    }
   });
 
   await page.goto('/');
@@ -279,6 +283,9 @@ test('guest can explore, search, view a memory, and stays unauthenticated', asyn
   await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
   await expect(page.getByRole('region', { name: /search locations/i })).toHaveCount(0);
 
+  // Playwright .click() fails here because the hero section overlay intercepts
+  // pointer events on the featured-memory bar. dispatchEvent bypasses the
+  // actionability check and dispatches the DOM click directly.
   await page.getByRole('button', { name: /morning light over the valley/i }).dispatchEvent('click');
   await expect(page.getByRole('article', { name: /memory detail/i })).toBeVisible();
   await expect(page.getByRole('heading', { name: /morning light over the valley/i })).toBeVisible();
