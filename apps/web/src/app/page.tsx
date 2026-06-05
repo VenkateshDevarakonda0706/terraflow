@@ -555,24 +555,24 @@ export default function HomePage() {
           <section className="tf-auth-card">
             <button className="tf-close" onClick={() => setShowAuth(false)} aria-label="Close sign in"><X size={17} /></button>
             <div className="tf-eyebrow">Join TerraFlow</div>
-            <h2 style={{ margin: '10px 0 8px', fontSize: 34, lineHeight: 1, letterSpacing: '-0.06em' }}>
+            <h2>
               {isRegister ? 'Create your memory map.' : 'Sign in when you are ready to share.'}
             </h2>
-            <p style={{ margin: '0 0 18px', color: 'var(--tf-muted)', lineHeight: 1.6 }}>
+            <p>
               Exploration is open. An account is only needed to upload, save, and follow memories.
             </p>
 
             {authError && (
-              <div style={{ marginBottom: 12, padding: 12, borderRadius: 16, color: '#fecdd3', background: 'rgba(251, 113, 133, 0.12)', border: '1px solid rgba(251, 113, 133, 0.22)' }}>
+              <div className="tf-auth-error">
                 {authError}
               </div>
             )}
 
-            <button className="tf-primary" style={{ width: '100%', marginBottom: 12 }} onClick={() => { window.location.href = `${API}/auth/google`; }}>
+            <button className="tf-primary tf-auth-social" onClick={() => { window.location.href = `${API}/auth/google`; }}>
               Continue with Google
             </button>
 
-            <form onSubmit={handleAuthSubmit} style={{ display: 'grid', gap: 12 }}>
+            <form onSubmit={handleAuthSubmit} className="tf-auth-form">
               <div className="tf-field">
                 <label>Email</label>
                 <input type="email" required value={email} onChange={event => setEmail(event.target.value)} placeholder="you@example.com" />
@@ -586,7 +586,7 @@ export default function HomePage() {
               </button>
             </form>
 
-            <button className="tf-ghost" style={{ width: '100%', marginTop: 12 }} onClick={() => { setIsRegister(value => !value); setAuthError(''); }}>
+            <button className="tf-ghost tf-auth-toggle" onClick={() => { setIsRegister(value => !value); setAuthError(''); }}>
               {isRegister ? 'I already have an account' : 'Create a new account'}
             </button>
           </section>
@@ -607,9 +607,9 @@ export default function HomePage() {
 
       {authState === 'loading' && (
         <div className="tf-auth-overlay">
-          <div className="tf-auth-card" style={{ textAlign: 'center' }}>
+          <div className="tf-auth-card tf-auth-card--loading">
             <Camera size={28} />
-            <div className="tf-eyebrow" style={{ marginTop: 12 }}>Loading TerraFlow</div>
+            <div className="tf-eyebrow">Loading TerraFlow</div>
           </div>
         </div>
       )}
