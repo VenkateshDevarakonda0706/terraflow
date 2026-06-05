@@ -176,6 +176,8 @@ export class PostsService {
         type: 'CLUSTERS',
         clusters: Array.from(clusterMap.values()),
         total,
+        page,
+        limit,
         hasMore: skip + limit < total,
       };
     }
@@ -194,6 +196,8 @@ export class PostsService {
         media: post.media,
       })),
       total,
+      page,
+      limit,
       hasMore: skip + limit < total,
     };
   }
@@ -333,7 +337,10 @@ export class PostsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return { posts, total: posts.length, page };
+    const total = await prisma.post.count({ where });
+    const hasMore = skip + limit < total;
+
+    return { posts, total, page, limit, hasMore };
   }
 
   private async asyncUpdateTravelStats(userId: string, lat: number, lng: number) {

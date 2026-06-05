@@ -8,6 +8,7 @@ jest.mock('@terraflow/database', () => ({
       create: jest.fn(),
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      count: jest.fn(),
     },
     travelStats: {
       findUnique: jest.fn(),
@@ -98,6 +99,7 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
       ];
 
       (prisma.post.findMany as jest.Mock).mockResolvedValue(mockPosts);
+      (prisma.post.count as jest.Mock).mockResolvedValue(mockPosts.length);
 
       const result = await postsService.explore(mockQuery);
       expect(result.type).toBe('CLUSTERS');
@@ -121,6 +123,7 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
 
       // Mocks database queries where privacy checks are run inside OR clauses
       (prisma.post.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.post.count as jest.Mock).mockResolvedValue(0);
 
       const result = await postsService.explore(mockQuery);
       expect(result.type).toBe('POSTS');
@@ -143,6 +146,124 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
           })
         })
       );
+    });
+  });
+
+  describe('PostsService Search Pagination Metadata', () => {
+    it('should return page, limit, total from count(), and hasMore on first page', async () => {
+      const mockPosts = Array.from({ length: 20 }, (_, i) => ({
+        id: `post-${i}`,
+        title: `Post ${i}`,
+        description: null,
+        latitude: 48.8584,
+        longitude: 2.2945,
+        h3Index: '88268562d5fffff',
+        tags: ['travel'],
+        visibility: 'PUBLIC' as const,
+        createdAt: new Date(),
+        user: { id: 'u1', username: 'user1', name: 'User', profilePic: null },
+        media: [],
+        _count: { likes: 0, comments: 0 },
+      }));
+
+      (prisma.post.findMany as jest.Mock).mockResolvedValue(mockPosts);
+      (prisma.post.count as jest.Mock).mockResolvedValue(45);
+
+      const result = await postsService.searchPosts({ q: 'Post', page: 1 });
+
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(20);
+      expect(result.total).toBe(45);
+      expect(result.hasMore).toBe(true);
+      expect(result.posts).toHaveLength(20);
+      expect(prisma.post.count).toHaveBeenCalled();
+    });
+
+    it('should return hasMore false when on the last page', async () => {
+      const mockPosts = Array.from({ length: 5 }, (_, i) => ({
+        id: `post-${i}`,
+        title: `Post ${i}`,
+        description: null,
+        latitude: 48.8584,
+        longitude: 2.2945,
+        h3Index: '88268562d5fffff',
+        tags: ['travel'],
+        visibility: 'PUBLIC' as const,
+        createdAt: new Date(),
+        user: { id: 'u1', username: 'user1', name: 'User', profilePic: null },
+        media: [],
+        _count: { likes: 0, comments: 0 },
+      }));
+
+      (prisma.post.findMany as jest.Mock).mockResolvedValue(mockPosts);
+      (prisma.post.count as jest.Mock).mockResolvedValue(25);
+
+      const result = await postsService.searchPosts({ q: 'Post', page: 2 });
+
+      expect(result.page).toBe(2);
+      expect(result.limit).toBe(20);
+      expect(result.total).toBe(25);
+      expect(result.hasMore).toBe(false);
+      expect(result.posts).toHaveLength(5);
+    });
+  });
+
+  describe('PostsService Explore Pagination Metadata', () => {
+    const baseQuery = {
+      minLat: 10.0,
+      maxLat: 60.0,
+      minLng: 2.0,
+      maxLng: 80.0,
+    };
+
+    it('should include page and limit in CLUSTERS response with hasMore true', async () => {
+      const mockPosts = Array.from({ length: 50 }, (_, i) => ({
+        id: `post-${i}`,
+        latitude: 48.8584,
+        longitude: 2.2945,
+        h3Index: '88268562d5fffff',
+        visibility: 'PUBLIC' as const,
+        user: { username: 'user1', name: 'User', profilePic: null },
+        media: [],
+      }));
+
+      (prisma.post.findMany as jest.Mock).mockResolvedValue(mockPosts);
+      (prisma.post.count as jest.Mock).mockResolvedValue(120);
+
+      const result = await postsService.explore({ ...baseQuery, zoomLevel: 2, page: 1 });
+
+      expect(result.type).toBe('CLUSTERS');
+      expect(result.total).toBe(120);
+      expect((result as any).page).toBe(1);
+      expect((result as any).limit).toBe(50);
+      expect(result.hasMore).toBe(true);
+    });
+
+    it('should include page and limit in POSTS response with hasMore false on last page', async () => {
+      const mockPosts = Array.from({ length: 10 }, (_, i) => ({
+        id: `post-${i}`,
+        title: `Post ${i}`,
+        description: null,
+        latitude: 48.8584,
+        longitude: 2.2945,
+        h3Index: '88268562d5fffff',
+        tags: ['travel'],
+        visibility: 'PUBLIC' as const,
+        createdAt: new Date(),
+        user: { username: 'user1', name: 'User', profilePic: null },
+        media: [],
+      }));
+
+      (prisma.post.findMany as jest.Mock).mockResolvedValue(mockPosts);
+      (prisma.post.count as jest.Mock).mockResolvedValue(60);
+
+      const result = await postsService.explore({ ...baseQuery, zoomLevel: 12, page: 2 });
+
+      expect(result.type).toBe('POSTS');
+      expect(result.total).toBe(60);
+      expect((result as any).page).toBe(2);
+      expect((result as any).limit).toBe(50);
+      expect(result.hasMore).toBe(false);
     });
   });
 });
