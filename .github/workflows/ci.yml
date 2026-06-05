@@ -29,4 +29,4 @@ jobs:
         run: npm run build
 
       - name: Run web tests
-        run: npm run test --workspace=apps/web
+        run: npm --workspace=apps/web run test
