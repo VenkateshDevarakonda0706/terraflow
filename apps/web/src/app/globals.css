@@ -551,6 +551,51 @@ button {
   animation: tf-rise 480ms var(--tf-ease) both;
 }
 
+.tf-auth-card h2 {
+  margin: 10px 0 8px;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.tf-auth-card p {
+  margin: 0 0 18px;
+  color: var(--tf-muted);
+  line-height: 1.6;
+}
+
+.tf-auth-error {
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  color: #fecdd3;
+  background: rgba(251, 113, 133, 0.12);
+  border: 1px solid rgba(251, 113, 133, 0.22);
+}
+
+.tf-auth-social {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.tf-auth-form {
+  display: grid;
+  gap: 12px;
+}
+
+.tf-auth-toggle {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.tf-auth-card--loading {
+  text-align: center;
+}
+
+.tf-auth-card--loading .tf-eyebrow {
+  margin-top: 12px;
+}
+
 .tf-publish-card {
   width: min(980px, calc(100vw - 32px));
   max-height: min(760px, calc(100vh - 32px));
