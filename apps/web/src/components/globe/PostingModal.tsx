@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, MapPin, Tag, Sparkles, Navigation, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Upload, MapPin, Tag, Sparkles, Navigation, Loader2, CheckCircle2, RotateCcw, AlertCircle } from 'lucide-react';
+
+type UploadStatus = 'idle' | 'uploading' | 'uploaded' | 'failed' | 'retrying';
 
 const API = 'http://localhost:4000/api/v1';
 
@@ -26,21 +28,22 @@ export default function PostingModal({ latitude, longitude, onClose, onSubmit }:
   const [description, setDescription] = useState('');
   const [tagsInput, setTagsInput]     = useState('');
   const [visibility, setVisibility]   = useState<'PUBLIC' | 'FRIENDS' | 'PRIVATE'>('PUBLIC');
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>('idle');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [error, setError]             = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const xhrRef = useRef<XMLHttpRequest | null>(null);
 
-  // Cleanup blob URLs on unmount or modal close
+  // Abort in-flight upload on unmount
   useEffect(() => {
     return () => {
-      if (uploadedUrl && uploadedUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(uploadedUrl);
-      }
+      xhrRef.current?.abort();
     };
-  }, [uploadedUrl]);
+  }, []);
 
   // Reset form state after successful post
   const resetForm = () => {
@@ -49,52 +52,80 @@ export default function PostingModal({ latitude, longitude, onClose, onSubmit }:
     setTagsInput('');
     setVisibility('PUBLIC');
     setError(null);
-    if (uploadedUrl && uploadedUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(uploadedUrl);
-    }
     setUploadedUrl(null);
+    setUploadStatus('idle');
+    setUploadProgress(0);
+    setSelectedFile(null);
+    xhrRef.current?.abort();
     if (fileRef.current) {
       fileRef.current.value = '';
     }
   };
 
-  // ── Upload real file to API ────────────────────────────────────────────────
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
+  // ── Upload file to API via XHR (supports progress) ─────────────────────────
+  const uploadFile = useCallback((file: File, isRetry = false) => {
+    xhrRef.current?.abort();
+    setUploadStatus(isRetry ? 'retrying' : 'uploading');
+    setUploadProgress(0);
     setError(null);
+    setUploadedUrl(null);
 
     const token = localStorage.getItem('accessToken');
     const formData = new FormData();
     formData.append('file', file);
 
-    try {
-      const res = await fetch(`${API}/posts/upload`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        credentials: 'include',
-        body: formData,
-      });
+    const xhr = new XMLHttpRequest();
+    xhrRef.current = xhr;
 
-      if (res.ok) {
-        const data = await res.json();
-        setUploadedUrl(data.url);
-        // Auto-fill coordinates from EXIF if returned
-        if (data.coordinates?.latitude && data.coordinates?.longitude) {
-          // Future: update lat/lng from EXIF
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        setUploadProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          setUploadedUrl(data.url);
+          setUploadStatus('uploaded');
+          setUploadProgress(100);
+        } catch {
+          setError('Invalid server response.');
+          setUploadStatus('failed');
         }
       } else {
-        // Fall back to preview URL for demo
-        setUploadedUrl(URL.createObjectURL(file));
+        let message = 'Upload failed.';
+        try { message = JSON.parse(xhr.responseText).message || message; } catch {}
+        setError(message);
+        setUploadStatus('failed');
       }
-    } catch (_) {
-      // Offline fallback: use local blob preview
-      setUploadedUrl(URL.createObjectURL(file));
-    } finally {
-      setIsUploading(false);
-    }
+    });
+
+    xhr.addEventListener('error', () => {
+      setError('Network error — check your connection.');
+      setUploadStatus('failed');
+    });
+
+    xhr.addEventListener('abort', () => {
+      // intentional abort (cleanup / retry) — no error
+    });
+
+    xhr.open('POST', `${API}/posts/upload`);
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.withCredentials = true;
+    xhr.send(formData);
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
+    uploadFile(file);
+  };
+
+  const handleRetry = () => {
+    if (selectedFile) uploadFile(selectedFile, true);
   };
 
   // ── AI Auto-tag (simulated) ────────────────────────────────────────────────
@@ -167,20 +198,30 @@ export default function PostingModal({ latitude, longitude, onClose, onSubmit }:
             <p className="text-xs text-white/40">Log your real-world experience onto the 3D globe.</p>
           </div>
 
-          {/* Error */}
+          {/* Error + Retry */}
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-300">
-              {error}
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-300 flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5 shrink-0" />{error}</span>
+              {uploadStatus === 'failed' && selectedFile && (
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  aria-label="Retry upload"
+                  className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 bg-red-500/15 hover:bg-red-500/25 border border-red-500/25 rounded-lg text-[9px] font-bold uppercase tracking-wider text-red-200 hover:text-white transition-all cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3" />Retry
+                </button>
+              )}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* Media upload */}
             <div
-              onClick={() => !isUploading && fileRef.current?.click()}
+              onClick={() => uploadStatus !== 'uploading' && uploadStatus !== 'retrying' && fileRef.current?.click()}
               className="h-32 rounded-2xl border border-dashed border-white/10 bg-white/2 flex flex-col items-center justify-center cursor-pointer hover:border-purple-500/50 hover:bg-white/4 transition-all group overflow-hidden relative"
             >
-              {uploadedUrl ? (
+              {uploadStatus === 'uploaded' && uploadedUrl ? (
                 <>
                   <img src={uploadedUrl} alt="Preview" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
@@ -192,16 +233,40 @@ export default function PostingModal({ latitude, longitude, onClose, onSubmit }:
                 </>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-white/40 group-hover:text-white/70 transition-all">
-                  {isUploading
+                  {(uploadStatus === 'uploading' || uploadStatus === 'retrying')
                     ? <Loader2 className="w-6 h-6 text-purple-400 animate-spin" />
-                    : <Upload className="w-6 h-6 text-purple-400" />
+                    : uploadStatus === 'failed'
+                      ? <AlertCircle className="w-6 h-6 text-red-400" />
+                      : <Upload className="w-6 h-6 text-purple-400" />
                   }
                   <span className="text-xs font-bold uppercase tracking-wider">
-                    {isUploading ? 'Uploading...' : 'Click to Upload Photo'}
+                    {(uploadStatus === 'uploading' || uploadStatus === 'retrying')
+                      ? `Uploading ${uploadProgress}%`
+                      : uploadStatus === 'failed'
+                        ? 'Upload failed'
+                        : 'Click to Upload Photo'
+                    }
                   </span>
-                  <span className="text-[9px] text-white/20 uppercase tracking-widest">JPG, PNG, WEBP</span>
+                  {(uploadStatus === 'uploading' || uploadStatus === 'retrying') && (
+                    <div className="w-3/4 h-1 rounded-full bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-purple-400 transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  )}
+                  {uploadStatus === 'idle' && (
+                    <span className="text-[9px] text-white/20 uppercase tracking-widest">JPG, PNG, WEBP</span>
+                  )}
                 </div>
               )}
+            </div>
+            {/* Accessible upload status */}
+            <div role="status" aria-live="polite" className="sr-only">
+              {uploadStatus === 'uploading' && `Uploading ${uploadProgress} percent`}
+              {uploadStatus === 'retrying' && `Retrying upload ${uploadProgress} percent`}
+              {uploadStatus === 'uploaded' && 'Upload complete'}
+              {uploadStatus === 'failed' && 'Upload failed'}
             </div>
             <input
               ref={fileRef}
@@ -294,7 +359,7 @@ export default function PostingModal({ latitude, longitude, onClose, onSubmit }:
             {/* Submit */}
             <button
               type="submit"
-              disabled={isSubmitting || !title.trim()}
+              disabled={isSubmitting || !title.trim() || uploadStatus === 'uploading' || uploadStatus === 'retrying' || uploadStatus === 'failed'}
               className="w-full mt-1 py-3.5 bg-white text-black hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-xl active:scale-[0.98] cursor-pointer"
             >
               {isSubmitting
