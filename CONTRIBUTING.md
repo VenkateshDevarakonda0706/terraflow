@@ -72,7 +72,9 @@ clear verification path are easier to review and merge.
 ## Pull Request Checklist
 
 - [ ] The PR has a clear title and short summary.
-- [ ] The change is scoped to one issue or one related set of files.
+- [ ] `npm run test` passes.
+- [ ] `npm run lint` passes.
+- [ ] `npm run format:check` passes.
 - [ ] `npm run build` passes.
 - [ ] UI changes include before/after screenshots or a short screen recording.
 - [ ] API behavior changes include tests or a clear manual verification note.
@@ -89,13 +91,16 @@ clear verification path are easier to review and merge.
 
 ## Testing and Verification
 
-At minimum, run:
+Before opening a pull request, run:
 
 ```bash
+npm run test
+npm run lint
+npm run format:check
 npm run build
 ```
 
-If you add tests, include the exact command in the PR description. The repository currently needs a standardized root test command, so issue-specific verification notes are welcome.
+Run `npm run format` to automatically format files using Prettier before committing.
 
 ## Reporting Security Issues
 

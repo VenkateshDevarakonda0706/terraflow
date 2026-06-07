@@ -1,0 +1,35 @@
+# Ignore directories with legacy code to prevent reformatting the whole repo
+apps/api/src
+apps/web/src
+packages/database
+packages/shared
+e2e
+docs
+skills
+
+# Ignore build output and dependencies
+node_modules
+dist
+.next
+apps/web/public
+package-lock.json
+
+# Ignore config files that aren't issue-related
+apps/api/tsconfig.json
+apps/api/package.json
+apps/web/tsconfig.json
+apps/web/package.json
+apps/web/copy-cesium-assets.js
+apps/web/next-env.d.ts
+apps/web/tailwind.config.ts
+apps/web/vitest.config.ts
+playwright.config.ts
+tsconfig.json
+AGENTS.md
+CODE_OF_CONDUCT.md
+deployment.yaml
+docker-compose.yml
+.github/BUG_REPORT_TEMPLATE.md
+.github/FEATURE_REQUEST_TEMPLATE.md
+.github/ISSUE_TEMPLATE.md
+.github/PULL_REQUEST_TEMPLATE.md

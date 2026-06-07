@@ -12,8 +12,6 @@ TerraFlow is the Memory Layer of Earth: a premium, exploration-first WebGL globe
 - Spatial explore API with H3 clustering for globe-scale discovery.
 - Profile, save, follow, social, notification, and messaging data models ready for expansion.
 
-
-
 ## Tech Stack
 
 - Monorepo: npm workspaces
@@ -60,21 +58,21 @@ Edit `.env` with local values. At minimum, set `DATABASE_URL`, `JWT_SECRET`, and
 
 ## Environment Variables
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `PORT` | Yes | API port, usually `4000`. |
-| `CLIENT_URL` | Yes | Web origin, usually `http://localhost:3000`. |
-| `DATABASE_URL` | Yes | PostgreSQL connection string for Prisma. |
-| `JWT_SECRET` | Yes | Access token signing secret. Use a long random value. |
-| `JWT_REFRESH_SECRET` | Yes | Refresh token signing secret. Use a different long random value. |
-| `NEXT_PUBLIC_API_URL` | No | Web app API base URL. Defaults to `http://localhost:4000/api/v1`. |
-| `GOOGLE_CLIENT_ID` | No | Google OAuth client ID. |
-| `GOOGLE_CLIENT_SECRET` | No | Google OAuth client secret. |
-| `GOOGLE_CALLBACK_URL` | No | Google OAuth callback URL. |
-| `GOOGLE_APPLICATION_CREDENTIALS` | No | Path to a GCS service account JSON file. |
-| `GCS_BUCKET_NAME` | No | Google Cloud Storage bucket name. |
-| `API_PUBLIC_URL` | No | Public API origin used for local upload URLs. |
-| `REDIS_URL` | No | Redis connection string for worker features. |
+| Variable                         | Required | Description                                                       |
+| -------------------------------- | -------- | ----------------------------------------------------------------- |
+| `PORT`                           | Yes      | API port, usually `4000`.                                         |
+| `CLIENT_URL`                     | Yes      | Web origin, usually `http://localhost:3000`.                      |
+| `DATABASE_URL`                   | Yes      | PostgreSQL connection string for Prisma.                          |
+| `JWT_SECRET`                     | Yes      | Access token signing secret. Use a long random value.             |
+| `JWT_REFRESH_SECRET`             | Yes      | Refresh token signing secret. Use a different long random value.  |
+| `NEXT_PUBLIC_API_URL`            | No       | Web app API base URL. Defaults to `http://localhost:4000/api/v1`. |
+| `GOOGLE_CLIENT_ID`               | No       | Google OAuth client ID.                                           |
+| `GOOGLE_CLIENT_SECRET`           | No       | Google OAuth client secret.                                       |
+| `GOOGLE_CALLBACK_URL`            | No       | Google OAuth callback URL.                                        |
+| `GOOGLE_APPLICATION_CREDENTIALS` | No       | Path to a GCS service account JSON file.                          |
+| `GCS_BUCKET_NAME`                | No       | Google Cloud Storage bucket name.                                 |
+| `API_PUBLIC_URL`                 | No       | Public API origin used for local upload URLs.                     |
+| `REDIS_URL`                      | No       | Redis connection string for worker features.                      |
 
 ## Database Setup
 
@@ -96,13 +94,15 @@ Open `http://localhost:3000`.
 
 The API runs at `http://localhost:4000` by default. Uploaded local files are served from `http://localhost:4000/uploads`.
 
-## Verification
+## Verification & Code Quality
 
-```bash
-npm run build
-```
+The repository provides standard root-level scripts to verify changes across the monorepo:
 
-Current audit evidence: `npm.cmd run build` passes on Windows PowerShell as of 2026-06-01. The repository does not yet expose a root test or lint script.
+- **`npm run build`**: Compiles all workspaces and builds production assets.
+- **`npm run test`**: Runs unit and integration tests. This delegates to `npm run test --workspaces --if-present` to execute test suites in current workspaces and will automatically include future workspace tests as they are added.
+- **`npm run lint`**: Analyzes code quality using ESLint.
+- **`npm run format`**: Automatically formats source code using Prettier.
+- **`npm run format:check`**: Validates code formatting style rules (used in CI pipelines).
 
 ## Contributing
 
@@ -112,7 +112,7 @@ Before opening a pull request:
 
 - Keep the globe central and preserve exploration before login.
 - Add or update tests for behavior changes when practical.
-- Run `npm run build`.
+- Run `npm run test`, `npm run lint`, `npm run format:check`, and `npm run build`.
 - Include screenshots for UI changes.
 - Avoid unrelated refactors in the same PR.
 

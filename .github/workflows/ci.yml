@@ -28,5 +28,11 @@ jobs:
       - name: Build packages
         run: npm run build
 
-      - name: Run web tests
-        run: npm --workspace=apps/web run test
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
