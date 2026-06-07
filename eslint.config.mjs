@@ -11,8 +11,7 @@ export default [
       'apps/web/public/**',
       'packages/database/generated/**',
 
-      // legacy application code
-      'apps/web/src/**',
+      // Application source is temporarily excluded and will be re-enabled incrementally in follow-up issue #46      'apps/web/src/**',
       'apps/api/src/**',
 
       // generated output

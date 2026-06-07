@@ -94,14 +94,15 @@ Open `http://localhost:3000`.
 
 The API runs at `http://localhost:4000` by default. Uploaded local files are served from `http://localhost:4000/uploads`.
 
-## Verification
+## Verification & Code Quality
 
-```bash
-npm run build
-npm run test
-npm run lint
-npm run format:check
-```
+The repository provides standard root-level scripts to verify changes across the monorepo:
+
+- **`npm run build`**: Compiles all workspaces and builds production assets.
+- **`npm run test`**: Runs unit and integration tests. This delegates to `npm run test --workspaces --if-present` to execute test suites in current workspaces and will automatically include future workspace tests as they are added.
+- **`npm run lint`**: Analyzes code quality using ESLint.
+- **`npm run format`**: Automatically formats source code using Prettier.
+- **`npm run format:check`**: Validates code formatting style rules (used in CI pipelines).
 
 ## Contributing
 
