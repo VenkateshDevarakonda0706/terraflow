@@ -11,7 +11,8 @@ export default [
       'apps/web/public/**',
       'packages/database/generated/**',
 
-      // Application source is temporarily excluded and will be re-enabled incrementally in follow-up issue #46      
+      // Application source is temporarily excluded and will be
+      // re-enabled incrementally in follow-up issue #46.
       'apps/web/src/**',
       'apps/api/src/**',
 
