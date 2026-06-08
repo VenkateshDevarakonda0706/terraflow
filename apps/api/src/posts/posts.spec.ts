@@ -5,6 +5,7 @@ import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard.js';
 import { prisma } from '@terraflow/database';
 import { UnauthorizedException } from '@nestjs/common';
 import * as h3 from 'h3-js';
+import { JsonWebTokenError } from 'jsonwebtoken';
 
 vi.mock('@terraflow/database', () => ({
   prisma: {
@@ -107,7 +108,7 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
 
       const result = await postsService.explore(mockQuery);
       expect(result.type).toBe('CLUSTERS');
-      
+
       if (result.type === 'CLUSTERS') {
         expect(result.clusters.length).toBe(1); // Groups both points into a single parent cell
         expect(result.clusters[0].count).toBe(2);
@@ -135,7 +136,7 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
       if (result.type === 'POSTS') {
         expect(result.posts.length).toBe(0); // Query blocks unauthorized friends posts from anonymous viewers
       }
-      
+
       expect(prisma.post.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
@@ -281,7 +282,16 @@ describe('OptionalJwtAuthGuard', () => {
   beforeEach(() => {
     guard = new OptionalJwtAuthGuard();
   });
-
+  it('should throw Token expired when token has expired', () => {
+    expect(() => {
+      guard.handleRequest(
+        null,
+        null,
+        { name: 'TokenExpiredError' },
+        {} as any
+      );
+    }).toThrow(UnauthorizedException);
+  });
   it('should return null when no token is provided', () => {
     const mockRequest = { headers: {} };
     const mockContext = {
@@ -316,7 +326,7 @@ describe('OptionalJwtAuthGuard', () => {
     } as any;
 
     expect(() => {
-      guard.handleRequest(null, null, new Error('Invalid signature'), mockContext);
+      guard.handleRequest(null, null, new JsonWebTokenError('invalid signature'), mockContext);
     }).toThrow(UnauthorizedException);
   });
 });
@@ -339,7 +349,7 @@ describe('PostsController Optional Context Routing', () => {
 
   it('should pass requestingUserId as undefined for anonymous requests', async () => {
     const mockReq = { user: null };
-    
+
     mockPostsService.explore.mockResolvedValue({ type: 'POSTS', posts: [] });
     await controller.explore(mockReq, { minLat: '0', maxLat: '10', minLng: '0', maxLng: '10', zoom: '2' });
     expect(mockPostsService.explore).toHaveBeenCalledWith(
@@ -367,7 +377,7 @@ describe('PostsController Optional Context Routing', () => {
 
   it('should pass requestingUserId as the user ID for authenticated requests', async () => {
     const mockReq = { user: { id: 'user-uuid-1' } };
-    
+
     mockPostsService.explore.mockResolvedValue({ type: 'POSTS', posts: [] });
     await controller.explore(mockReq, { minLat: '0', maxLat: '10', minLng: '0', maxLng: '10', zoom: '2' });
     expect(mockPostsService.explore).toHaveBeenCalledWith(
