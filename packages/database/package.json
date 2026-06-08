@@ -6,7 +6,11 @@
   "scripts": {
     "generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:seed": "prisma db seed",
     "build": "tsc"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0"

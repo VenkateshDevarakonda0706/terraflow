@@ -81,6 +81,31 @@ npm run db:generate
 npm run db:push
 ```
 
+### Loading Demo Data
+
+To populate your local database with public demo memory posts and users, run:
+
+```bash
+npm install
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+```
+
+The seed script will populate the database with the following resources:
+
+- **Demo Users**:
+  - `maya` (`maya@example.com`): Bio: Explorer and photographer.
+  - `ren` (`ren@example.com`): Bio: Traveler and coffee enthusiast.
+  - `amina` (`amina@example.com`): Bio: Seeking sunrises from above.
+    _Note: All demo users are seeded with the default password `password123`._
+- **Demo Memories**:
+  - Yosemite (`Morning light over the valley` by `maya`)
+  - Kyoto (`Rain on the old stone path` by `ren`)
+  - Cappadocia (`Balloons before breakfast` by `amina`)
+
+The seed script is completely idempotent and can be run repeatedly; it will clean up and recreate only the targeted demo records while leaving other developer-created data intact.
+
 ## Local Development
 
 Run the API and web app in separate terminals:
