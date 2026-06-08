@@ -6,6 +6,7 @@ import { AuthService } from './auth.service.js';
 import { JwtStrategy } from './jwt.strategy.js';
 import { GoogleStrategy } from './google.strategy.js';
 import { AppleStrategy } from './apple.strategy.js';
+import { OptionalJwtAuthGuard } from './optional-jwt-auth.guard.js';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { AppleStrategy } from './apple.strategy.js';
     JwtModule.register({}),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, AppleStrategy],
-  exports: [AuthService, JwtStrategy, GoogleStrategy, AppleStrategy, PassportModule],
+  providers: [AuthService, JwtStrategy, GoogleStrategy, AppleStrategy, OptionalJwtAuthGuard],
+  exports: [AuthService, JwtStrategy, GoogleStrategy, AppleStrategy, PassportModule, OptionalJwtAuthGuard],
 })
 export class AuthModule {}

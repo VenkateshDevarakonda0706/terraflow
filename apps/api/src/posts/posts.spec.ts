@@ -1,21 +1,25 @@
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { PostsService } from './posts.service.js';
+import { PostsController } from './posts.controller.js';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard.js';
 import { prisma } from '@terraflow/database';
+import { UnauthorizedException } from '@nestjs/common';
 import * as h3 from 'h3-js';
 
-jest.mock('@terraflow/database', () => ({
+vi.mock('@terraflow/database', () => ({
   prisma: {
     post: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      count: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      count: vi.fn(),
     },
     travelStats: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
     },
     user: {
-      findUnique: jest.fn(),
+      findUnique: vi.fn(),
     }
   },
 }));
@@ -25,7 +29,7 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
 
   beforeEach(() => {
     postsService = new PostsService();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('PostsService H3 Index Post Creation', () => {
@@ -39,7 +43,7 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
         mediaUrls: ['https://images.unsplash.com/paris-scenic.jpeg'],
       };
 
-      (prisma.post.create as jest.Mock).mockResolvedValue({
+      (prisma.post.create as Mock).mockResolvedValue({
         id: 'post-uuid-paris',
         userId: 'user-uuid-1',
         title: mockDto.title,
@@ -98,8 +102,8 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
         }
       ];
 
-      (prisma.post.findMany as jest.Mock).mockResolvedValue(mockPosts);
-      (prisma.post.count as jest.Mock).mockResolvedValue(mockPosts.length);
+      (prisma.post.findMany as Mock).mockResolvedValue(mockPosts);
+      (prisma.post.count as Mock).mockResolvedValue(mockPosts.length);
 
       const result = await postsService.explore(mockQuery);
       expect(result.type).toBe('CLUSTERS');
@@ -123,8 +127,8 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
       };
 
       // Mocks database queries where privacy checks are run inside OR clauses
-      (prisma.post.findMany as jest.Mock).mockResolvedValue([]);
-      (prisma.post.count as jest.Mock).mockResolvedValue(0);
+      (prisma.post.findMany as Mock).mockResolvedValue([]);
+      (prisma.post.count as Mock).mockResolvedValue(0);
 
       const result = await postsService.explore(mockQuery);
       expect(result.type).toBe('POSTS');
@@ -169,8 +173,8 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
         _count: { likes: 0, comments: 0 },
       }));
 
-      (prisma.post.findMany as jest.Mock).mockResolvedValue(mockPosts);
-      (prisma.post.count as jest.Mock).mockResolvedValue(45);
+      (prisma.post.findMany as Mock).mockResolvedValue(mockPosts);
+      (prisma.post.count as Mock).mockResolvedValue(45);
 
       const result = await postsService.searchPosts({ q: 'Post', page: 1 });
 
@@ -198,8 +202,8 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
         _count: { likes: 0, comments: 0 },
       }));
 
-      (prisma.post.findMany as jest.Mock).mockResolvedValue(mockPosts);
-      (prisma.post.count as jest.Mock).mockResolvedValue(25);
+      (prisma.post.findMany as Mock).mockResolvedValue(mockPosts);
+      (prisma.post.count as Mock).mockResolvedValue(25);
 
       const result = await postsService.searchPosts({ q: 'Post', page: 2 });
 
@@ -230,8 +234,8 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
         media: [],
       }));
 
-      (prisma.post.findMany as jest.Mock).mockResolvedValue(mockPosts);
-      (prisma.post.count as jest.Mock).mockResolvedValue(120);
+      (prisma.post.findMany as Mock).mockResolvedValue(mockPosts);
+      (prisma.post.count as Mock).mockResolvedValue(120);
 
       const result = await postsService.explore({ ...baseQuery, zoomLevel: 2, page: 1 });
 
@@ -257,8 +261,8 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
         media: [],
       }));
 
-      (prisma.post.findMany as jest.Mock).mockResolvedValue(mockPosts);
-      (prisma.post.count as jest.Mock).mockResolvedValue(60);
+      (prisma.post.findMany as Mock).mockResolvedValue(mockPosts);
+      (prisma.post.count as Mock).mockResolvedValue(60);
 
       const result = await postsService.explore({ ...baseQuery, zoomLevel: 12, page: 2 });
 
@@ -268,5 +272,124 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
       expect(result.limit).toBe(50);
       expect(result.hasMore).toBe(false);
     });
+  });
+});
+
+describe('OptionalJwtAuthGuard', () => {
+  let guard: OptionalJwtAuthGuard;
+
+  beforeEach(() => {
+    guard = new OptionalJwtAuthGuard();
+  });
+
+  it('should return null when no token is provided', () => {
+    const mockRequest = { headers: {} };
+    const mockContext = {
+      switchToHttp: () => ({
+        getRequest: () => mockRequest,
+      }),
+    } as any;
+
+    const result = guard.handleRequest(null, null, null, mockContext);
+    expect(result).toBeNull();
+  });
+
+  it('should return user when valid token is provided', () => {
+    const mockRequest = { headers: { authorization: 'Bearer valid-token' } };
+    const mockContext = {
+      switchToHttp: () => ({
+        getRequest: () => mockRequest,
+      }),
+    } as any;
+    const mockUser = { id: 'user-uuid-1', email: 'test@example.com' };
+
+    const result = guard.handleRequest(null, mockUser, null, mockContext);
+    expect(result).toBe(mockUser);
+  });
+
+  it('should throw UnauthorizedException when invalid token is provided', () => {
+    const mockRequest = { headers: { authorization: 'Bearer invalid-token' } };
+    const mockContext = {
+      switchToHttp: () => ({
+        getRequest: () => mockRequest,
+      }),
+    } as any;
+
+    expect(() => {
+      guard.handleRequest(null, null, new Error('Invalid signature'), mockContext);
+    }).toThrow(UnauthorizedException);
+  });
+});
+
+describe('PostsController Optional Context Routing', () => {
+  let controller: PostsController;
+  let mockPostsService: any;
+  let mockStorageService: any;
+
+  beforeEach(() => {
+    mockPostsService = {
+      searchPosts: vi.fn(),
+      explore: vi.fn(),
+      getTimeline: vi.fn(),
+      findById: vi.fn(),
+    };
+    mockStorageService = {};
+    controller = new PostsController(mockPostsService, mockStorageService);
+  });
+
+  it('should pass requestingUserId as undefined for anonymous requests', async () => {
+    const mockReq = { user: null };
+    
+    mockPostsService.explore.mockResolvedValue({ type: 'POSTS', posts: [] });
+    await controller.explore(mockReq, { minLat: '0', maxLat: '10', minLng: '0', maxLng: '10', zoom: '2' });
+    expect(mockPostsService.explore).toHaveBeenCalledWith(
+      expect.objectContaining({ requestingUserId: undefined })
+    );
+
+    mockPostsService.searchPosts.mockResolvedValue({ posts: [] });
+    await controller.search(mockReq, 'query');
+    expect(mockPostsService.searchPosts).toHaveBeenCalledWith(
+      expect.objectContaining({ requestingUserId: undefined })
+    );
+
+    mockPostsService.getTimeline.mockResolvedValue([]);
+    await controller.getTimeline(mockReq, 10, 20);
+    expect(mockPostsService.getTimeline).toHaveBeenCalledWith(
+      10, 20, 5, undefined
+    );
+
+    mockPostsService.findById.mockResolvedValue({});
+    await controller.getOne(mockReq, 'post-id');
+    expect(mockPostsService.findById).toHaveBeenCalledWith(
+      'post-id', undefined
+    );
+  });
+
+  it('should pass requestingUserId as the user ID for authenticated requests', async () => {
+    const mockReq = { user: { id: 'user-uuid-1' } };
+    
+    mockPostsService.explore.mockResolvedValue({ type: 'POSTS', posts: [] });
+    await controller.explore(mockReq, { minLat: '0', maxLat: '10', minLng: '0', maxLng: '10', zoom: '2' });
+    expect(mockPostsService.explore).toHaveBeenCalledWith(
+      expect.objectContaining({ requestingUserId: 'user-uuid-1' })
+    );
+
+    mockPostsService.searchPosts.mockResolvedValue({ posts: [] });
+    await controller.search(mockReq, 'query');
+    expect(mockPostsService.searchPosts).toHaveBeenCalledWith(
+      expect.objectContaining({ requestingUserId: 'user-uuid-1' })
+    );
+
+    mockPostsService.getTimeline.mockResolvedValue([]);
+    await controller.getTimeline(mockReq, 10, 20);
+    expect(mockPostsService.getTimeline).toHaveBeenCalledWith(
+      10, 20, 5, 'user-uuid-1'
+    );
+
+    mockPostsService.findById.mockResolvedValue({});
+    await controller.getOne(mockReq, 'post-id');
+    expect(mockPostsService.findById).toHaveBeenCalledWith(
+      'post-id', 'user-uuid-1'
+    );
   });
 });
