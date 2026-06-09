@@ -1,6 +1,5 @@
 import { PrismaClient, Visibility, MediaType } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import * as h3 from 'h3-js';
 import dotenv from 'dotenv';
 import path from 'path';
 import { latLngToCell } from 'h3-js';
