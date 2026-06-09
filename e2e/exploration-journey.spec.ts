@@ -342,3 +342,32 @@ test('authenticated user can publish a memory with mocked data', async ({ page }
   await expect(page.getByText('Sunrise over the Seine')).toBeVisible();
   await expect(page.getByText('A quiet morning by the river.')).toBeVisible();
 });
+
+test('guest search shows empty state when no results are found', async ({ page }) => {
+  await loadGuestPage(page);
+
+  // Override search mocks to return zero results
+  await page.route('**/nominatim.openstreetmap.org/search**', route => {
+    route.fulfill({ json: [] });
+  });
+
+  await page.route('**/api/v1/posts/search**', route => {
+    route.fulfill({
+      json: {
+        posts: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        hasMore: false,
+      },
+    });
+  });
+
+  await page.getByRole('button', { name: /search earth/i }).click();
+  await page.getByPlaceholder('Search a city, landmark, or memory...').fill('zzzz-not-a-real-location-12345');
+
+  // Verify the empty state message with exploration tone is visible
+  const emptyState = page.getByRole('status');
+  await expect(emptyState).toBeVisible();
+  await expect(emptyState).toContainText('The globe is silent here. Try another place or memory.');
+});

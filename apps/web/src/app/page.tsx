@@ -488,8 +488,8 @@ export default function HomePage() {
           )}
           {!searching && searchQuery.trim() && locationResults.length === 0 && memoryResults.length === 0 && (
             <div className="tf-search-results">
-              <div className="tf-orbit-card" style={{ width: '100%', padding: '14px 16px', borderRadius: 18 }}>
-                <p style={{ margin: 0, color: 'var(--tf-muted)' }}>No locations or memories found.</p>
+              <div className="tf-orbit-card" role="status" aria-live="polite" style={{ width: '100%', padding: '14px 16px', borderRadius: 18 }}>
+                <p style={{ margin: 0, color: 'var(--tf-muted)' }}>The globe is silent here. Try another place or memory.</p>
               </div>
             </div>
           )}
