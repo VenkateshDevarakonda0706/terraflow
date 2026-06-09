@@ -11,6 +11,7 @@
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:api": "npm run start:dev --workspace=apps/api",
     "db:generate": "npm run generate --workspace=packages/database",
+    "db:seed": "npm run db:seed --workspace=packages/database",
     "db:push": "npm run db:push --workspace=packages/database",
     "build:database": "npm run build --workspace=packages/database",
     "build:shared": "npm run build --workspace=packages/shared",
