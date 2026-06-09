@@ -373,6 +373,15 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
             })
           })
         );
+
+        const call = (prisma.post.findMany as Mock).mock.calls[0][0];
+        const orClauses = call.where.OR;
+
+        expect(orClauses).not.toContainEqual(
+          expect.objectContaining({
+            visibility: 'PRIVATE',
+          }),
+        );
       });
     });
 
@@ -442,6 +451,15 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
               ])
             })
           })
+        );
+
+        const call = (prisma.post.findMany as Mock).mock.calls[0][0];
+        const orClauses = call.where.OR;
+
+        expect(orClauses).not.toContainEqual(
+          expect.objectContaining({
+            visibility: 'PRIVATE',
+          }),
         );
       });
     });
