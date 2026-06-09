@@ -9,7 +9,8 @@ Closes #
 ## Verification
 
 - [ ] `npm run build`
-- [ ] Screenshots or recording attached for UI changes
+- [ ] Desktop and mobile screenshots attached for UI changes
+- [ ] Confirmed no layout overlap or unreadable text for UI changes
 - [ ] API behavior manually verified or covered by tests
 
 ## Product Checklist
