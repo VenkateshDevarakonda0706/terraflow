@@ -215,6 +215,18 @@ async function mockCommonRoutes(page: Page) {
     route.fulfill({ json: [searchResult] });
   });
 
+  await page.route('**/api/v1/posts/search**', route => {
+    route.fulfill({
+      json: {
+        posts: [publishedPost],
+        total: 1,
+        page: 1,
+        limit: 20,
+        hasMore: false,
+      },
+    });
+  });
+
   await page.route('**/nominatim.openstreetmap.org/reverse**', route => {
     route.fulfill({ json: { display_name: 'Paris, France' } });
   });
@@ -278,7 +290,17 @@ test('guest can explore, search, view a memory, and stays unauthenticated', asyn
   await page.getByRole('button', { name: /search earth/i }).click();
   await page.getByPlaceholder('Search a city, landmark, or memory...').fill('Paris');
   await expect(page.getByRole('button', { name: /paris, france/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /sunrise over the seine/i })).toBeVisible();
 
+  await page.getByRole('button', { name: /sunrise over the seine/i }).click();
+  await expect(page.getByRole('article', { name: /memory detail/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /sunrise over the seine/i })).toBeVisible();
+
+  await page.getByRole('button', { name: /close memory/i }).click();
+  await expect(page.getByRole('article', { name: /memory detail/i })).toHaveCount(0);
+
+  await page.getByRole('button', { name: /^search$/i }).click();
+  await page.getByPlaceholder('Search a city, landmark, or memory...').fill('Paris');
   await page.getByRole('button', { name: /paris, france/i }).click();
   await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
   await expect(page.getByRole('region', { name: /search locations/i })).toHaveCount(0);

@@ -90,7 +90,8 @@ export default function HomePage() {
 
   const [activeAction, setActiveAction] = useState<NavAction>('explore');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [locationResults, setLocationResults] = useState<any[]>([]);
+  const [memoryResults, setMemoryResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [activePost, setActivePost] = useState<any>(null);
   const [showPostModal, setShowPostModal] = useState(false);
@@ -204,7 +205,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (activeAction !== 'search' || !searchQuery.trim()) {
-      setSearchResults([]);
+      setLocationResults([]);
+      setMemoryResults([]);
       setSearching(false);
       return;
     }
@@ -212,14 +214,21 @@ export default function HomePage() {
     setSearching(true);
     const timeout = setTimeout(async () => {
       try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=5`,
-          { headers: { 'Accept-Language': 'en' } },
-        );
-        const results = await response.json();
-        setSearchResults(results);
+        const [locRes, memRes] = await Promise.all([
+          fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=5`,
+            { headers: { 'Accept-Language': 'en' } },
+          ).then(r => (r.ok ? r.json() : [])).catch(() => []),
+          fetch(
+            `${API}/posts/search?q=${encodeURIComponent(searchQuery)}`,
+            { headers: authH() },
+          ).then(r => (r.ok ? r.json() : { posts: [] })).catch(() => ({ posts: [] })),
+        ]);
+        setLocationResults(locRes);
+        setMemoryResults(memRes?.posts || []);
       } catch {
-        setSearchResults([]);
+        setLocationResults([]);
+        setMemoryResults([]);
       } finally {
         setSearching(false);
       }
@@ -343,7 +352,17 @@ export default function HomePage() {
     const lng = parseFloat(result.lon);
     globeRef.current?.flyTo(lat, lng, 90000);
     setSearchQuery(result.display_name.split(',')[0]);
-    setSearchResults([]);
+    setLocationResults([]);
+    setMemoryResults([]);
+    setActiveAction('explore');
+  }
+
+  function handleMemorySelect(post: any) {
+    setActivePost(post);
+    globeRef.current?.flyTo(post.latitude, post.longitude, 140000);
+    setSearchQuery('');
+    setLocationResults([]);
+    setMemoryResults([]);
     setActiveAction('explore');
   }
 
@@ -436,15 +455,42 @@ export default function HomePage() {
             />
             <button className="tf-ghost" onClick={() => setActiveAction('explore')}>Close</button>
           </div>
-          {(searching || searchResults.length > 0) && (
-            <div className="tf-search-results">
+          {(searching || locationResults.length > 0 || memoryResults.length > 0) && (
+            <div className="tf-search-results" style={{ maxHeight: '380px', overflowY: 'auto' }}>
               {searching && [0, 1, 2].map(item => <div key={item} className="tf-skeleton" style={{ height: 44, borderRadius: 16 }} />)}
-              {!searching && searchResults.map((result: any, index) => (
-                <button key={`${result.place_id || result.display_name}-${index}`} onMouseDown={() => handleLocationSelect(result)}>
-                  <MapPin size={14} style={{ display: 'inline', marginRight: 8 }} />
-                  {result.display_name}
-                </button>
-              ))}
+              {!searching && (
+                <>
+                  {locationResults.length > 0 && (
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      <div className="tf-eyebrow" style={{ padding: '6px 14px 2px', fontSize: 10 }}>Locations</div>
+                      {locationResults.map((result: any, index) => (
+                        <button key={`loc-${result.place_id || result.display_name}-${index}`} onMouseDown={() => handleLocationSelect(result)}>
+                          <MapPin size={14} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle' }} />
+                          {result.display_name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {memoryResults.length > 0 && (
+                    <div style={{ display: 'grid', gap: 6, marginTop: locationResults.length > 0 ? 12 : 0 }}>
+                      <div className="tf-eyebrow" style={{ padding: '6px 14px 2px', fontSize: 10 }}>Memories</div>
+                      {memoryResults.map((post: any, index) => (
+                        <button key={`mem-${post.id}-${index}`} onMouseDown={() => handleMemorySelect(post)}>
+                          <Camera size={14} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle' }} />
+                          {post.title} {post.user?.name ? `— by ${post.user.name}` : ''}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+          {!searching && searchQuery.trim() && locationResults.length === 0 && memoryResults.length === 0 && (
+            <div className="tf-search-results">
+              <div className="tf-orbit-card" style={{ width: '100%', padding: '14px 16px', borderRadius: 18 }}>
+                <p style={{ margin: 0, color: 'var(--tf-muted)' }}>No locations or memories found.</p>
+              </div>
             </div>
           )}
         </section>
