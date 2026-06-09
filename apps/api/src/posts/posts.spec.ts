@@ -3,7 +3,7 @@ import { PostsService } from './posts.service.js';
 import { PostsController } from './posts.controller.js';
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard.js';
 import { prisma } from '@terraflow/database';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import * as h3 from 'h3-js';
 import { JsonWebTokenError } from 'jsonwebtoken';
 
@@ -20,6 +20,9 @@ vi.mock('@terraflow/database', () => ({
       update: vi.fn(),
     },
     user: {
+      findUnique: vi.fn(),
+    },
+    follow: {
       findUnique: vi.fn(),
     }
   },
@@ -272,6 +275,306 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
       expect(result.page).toBe(2);
       expect(result.limit).toBe(50);
       expect(result.hasMore).toBe(false);
+    });
+  });
+
+  describe('privacy visibility regression coverage', () => {
+    // explore() tests
+    describe('explore()', () => {
+      it('explore() - anonymous user: should query only PUBLIC visibility posts', async () => {
+        const mockQuery = {
+          minLat: 10.0,
+          maxLat: 60.0,
+          minLng: 2.0,
+          maxLng: 80.0,
+          zoomLevel: 12,
+          requestingUserId: undefined,
+        };
+
+        (prisma.post.findMany as Mock).mockResolvedValue([]);
+        (prisma.post.count as Mock).mockResolvedValue(0);
+
+        await postsService.explore(mockQuery);
+
+        expect(prisma.post.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              OR: [
+                { visibility: 'PUBLIC' }
+              ]
+            })
+          })
+        );
+      });
+
+      it('explore() - authenticated owner: should query posts matching own userId', async () => {
+        const mockQuery = {
+          minLat: 10.0,
+          maxLat: 60.0,
+          minLng: 2.0,
+          maxLng: 80.0,
+          zoomLevel: 12,
+          requestingUserId: 'owner-id',
+        };
+
+        (prisma.post.findMany as Mock).mockResolvedValue([]);
+        (prisma.post.count as Mock).mockResolvedValue(0);
+
+        await postsService.explore(mockQuery);
+
+        expect(prisma.post.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              OR: expect.arrayContaining([
+                { visibility: 'PUBLIC' },
+                { userId: 'owner-id' },
+                expect.objectContaining({
+                  visibility: 'FRIENDS',
+                  user: expect.objectContaining({
+                    followers: expect.objectContaining({
+                      some: { followerId: 'owner-id' }
+                    })
+                  })
+                })
+              ])
+            })
+          })
+        );
+      });
+
+      it('explore() - authenticated user: should query posts with FRIENDS visibility where followed by user', async () => {
+        const mockQuery = {
+          minLat: 10.0,
+          maxLat: 60.0,
+          minLng: 2.0,
+          maxLng: 80.0,
+          zoomLevel: 12,
+          requestingUserId: 'user-id',
+        };
+
+        (prisma.post.findMany as Mock).mockResolvedValue([]);
+        (prisma.post.count as Mock).mockResolvedValue(0);
+
+        await postsService.explore(mockQuery);
+
+        expect(prisma.post.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              OR: expect.arrayContaining([
+                expect.objectContaining({
+                  visibility: 'FRIENDS',
+                  user: {
+                    followers: {
+                      some: { followerId: 'user-id' }
+                    }
+                  }
+                })
+              ])
+            })
+          })
+        );
+      });
+    });
+
+    // searchPosts() tests
+    describe('searchPosts()', () => {
+      it('searchPosts() - anonymous user: should query only PUBLIC visibility posts', async () => {
+        (prisma.post.findMany as Mock).mockResolvedValue([]);
+        (prisma.post.count as Mock).mockResolvedValue(0);
+
+        await postsService.searchPosts({ q: 'test', requestingUserId: undefined });
+
+        expect(prisma.post.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              OR: [
+                { visibility: 'PUBLIC' }
+              ]
+            })
+          })
+        );
+      });
+
+      it('searchPosts() - authenticated owner: should query posts matching own userId', async () => {
+        (prisma.post.findMany as Mock).mockResolvedValue([]);
+        (prisma.post.count as Mock).mockResolvedValue(0);
+
+        await postsService.searchPosts({ q: 'test', requestingUserId: 'owner-id' });
+
+        expect(prisma.post.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              OR: expect.arrayContaining([
+                { visibility: 'PUBLIC' },
+                { userId: 'owner-id' },
+                expect.objectContaining({
+                  visibility: 'FRIENDS',
+                  user: expect.objectContaining({
+                    followers: expect.objectContaining({
+                      some: { followerId: 'owner-id' }
+                    })
+                  })
+                })
+              ])
+            })
+          })
+        );
+      });
+
+      it('searchPosts() - authenticated user: should query posts with FRIENDS visibility where followed by user', async () => {
+        (prisma.post.findMany as Mock).mockResolvedValue([]);
+        (prisma.post.count as Mock).mockResolvedValue(0);
+
+        await postsService.searchPosts({ q: 'test', requestingUserId: 'user-id' });
+
+        expect(prisma.post.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              OR: expect.arrayContaining([
+                expect.objectContaining({
+                  visibility: 'FRIENDS',
+                  user: {
+                    followers: {
+                      some: { followerId: 'user-id' }
+                    }
+                  }
+                })
+              ])
+            })
+          })
+        );
+      });
+    });
+
+    // findById() tests
+    describe('findById()', () => {
+      // PUBLIC
+      it('findById() - PUBLIC: anonymous user can access', async () => {
+        const mockPost = {
+          id: 'post-1',
+          userId: 'owner-id',
+          visibility: 'PUBLIC',
+        };
+        (prisma.post.findUnique as Mock).mockResolvedValue(mockPost);
+
+        const result = await postsService.findById('post-1', undefined);
+        expect(result).toEqual(mockPost);
+        expect(prisma.post.findUnique).toHaveBeenCalledWith(
+          expect.objectContaining({ where: { id: 'post-1' } })
+        );
+      });
+
+      it('findById() - PUBLIC: authenticated user can access', async () => {
+        const mockPost = {
+          id: 'post-1',
+          userId: 'owner-id',
+          visibility: 'PUBLIC',
+        };
+        (prisma.post.findUnique as Mock).mockResolvedValue(mockPost);
+
+        const result = await postsService.findById('post-1', 'stranger-id');
+        expect(result).toEqual(mockPost);
+      });
+
+      // PRIVATE
+      it('findById() - PRIVATE: owner can access', async () => {
+        const mockPost = {
+          id: 'post-1',
+          userId: 'owner-id',
+          visibility: 'PRIVATE',
+        };
+        (prisma.post.findUnique as Mock).mockResolvedValue(mockPost);
+
+        const result = await postsService.findById('post-1', 'owner-id');
+        expect(result).toEqual(mockPost);
+      });
+
+      it('findById() - PRIVATE: non-owner gets ForbiddenException', async () => {
+        const mockPost = {
+          id: 'post-1',
+          userId: 'owner-id',
+          visibility: 'PRIVATE',
+        };
+        (prisma.post.findUnique as Mock).mockResolvedValue(mockPost);
+
+        await expect(postsService.findById('post-1', 'stranger-id')).rejects.toThrow(
+          ForbiddenException
+        );
+      });
+
+      it('findById() - PRIVATE: anonymous gets ForbiddenException', async () => {
+        const mockPost = {
+          id: 'post-1',
+          userId: 'owner-id',
+          visibility: 'PRIVATE',
+        };
+        (prisma.post.findUnique as Mock).mockResolvedValue(mockPost);
+
+        await expect(postsService.findById('post-1', undefined)).rejects.toThrow(
+          ForbiddenException
+        );
+      });
+
+      // FRIENDS
+      it('findById() - FRIENDS: owner can access', async () => {
+        const mockPost = {
+          id: 'post-1',
+          userId: 'owner-id',
+          visibility: 'FRIENDS',
+        };
+        (prisma.post.findUnique as Mock).mockResolvedValue(mockPost);
+
+        const result = await postsService.findById('post-1', 'owner-id');
+        expect(result).toEqual(mockPost);
+      });
+
+      it('findById() - FRIENDS: follower can access', async () => {
+        const mockPost = {
+          id: 'post-1',
+          userId: 'owner-id',
+          visibility: 'FRIENDS',
+        };
+        (prisma.post.findUnique as Mock).mockResolvedValue(mockPost);
+        (prisma.follow.findUnique as Mock).mockResolvedValue({ followerId: 'follower-id', followingId: 'owner-id' });
+
+        const result = await postsService.findById('post-1', 'follower-id');
+        expect(result).toEqual(mockPost);
+        expect(prisma.follow.findUnique).toHaveBeenCalledWith({
+          where: {
+            followerId_followingId: {
+              followerId: 'follower-id',
+              followingId: 'owner-id',
+            },
+          },
+        });
+      });
+
+      it('findById() - FRIENDS: non-follower gets ForbiddenException("This post is friends-only")', async () => {
+        const mockPost = {
+          id: 'post-1',
+          userId: 'owner-id',
+          visibility: 'FRIENDS',
+        };
+        (prisma.post.findUnique as Mock).mockResolvedValue(mockPost);
+        (prisma.follow.findUnique as Mock).mockResolvedValue(null);
+
+        await expect(postsService.findById('post-1', 'stranger-id')).rejects.toThrow(
+          new ForbiddenException('This post is friends-only')
+        );
+      });
+
+      it('findById() - FRIENDS: anonymous gets ForbiddenException("Login required")', async () => {
+        const mockPost = {
+          id: 'post-1',
+          userId: 'owner-id',
+          visibility: 'FRIENDS',
+        };
+        (prisma.post.findUnique as Mock).mockResolvedValue(mockPost);
+
+        await expect(postsService.findById('post-1', undefined)).rejects.toThrow(
+          new ForbiddenException('Login required')
+        );
+      });
     });
   });
 });
