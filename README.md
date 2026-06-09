@@ -35,6 +35,16 @@ skills/             TerraFlow project review and QA instructions
 
 The user journey should keep Earth as the primary surface. Guests can explore first; account creation appears only when a user uploads, saves, follows, or manages a profile.
 
+## Design System
+
+For styling guidelines, typography, color tokens, and core components, see the [TerraFlow Design System](docs/terraflow-design-system.md).
+
+All contributions should align with these core user experience principles:
+
+- **Globe-First Experience**: Keep the 3D globe central; controls should support exploration without competing for attention.
+- **Exploration Before Login**: Allow users to explore public content before authentication. Require login only when necessary for interaction or creation.
+- **Lightweight Uploads**: Keep publishing workflows fast and simple with minimal friction.
+
 ## Prerequisites
 
 - Node.js 18 or newer
