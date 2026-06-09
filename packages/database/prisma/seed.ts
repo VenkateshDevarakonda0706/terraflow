@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import * as h3 from 'h3-js';
 import dotenv from 'dotenv';
 import path from 'path';
+import { latLngToCell } from 'h3-js';
 
 // Load environment variables from the monorepo root .env file
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
@@ -14,22 +15,15 @@ const prisma = new PrismaClient();
  * matching the resolution used in the API (posts.service.ts).
  */
 function getH3Index(lat: number, lng: number): string {
-  try {
-    if (typeof h3.latLngToCell === 'function') {
-      return h3.latLngToCell(lat, lng, 8);
-    } else {
-      return (h3 as unknown as { geoToH3: (lat: number, lng: number, res: number) => string }).geoToH3(lat, lng, 8);
-    }
-  } catch (err) {
-    console.warn(`[Seed] Failed to calculate H3 index for (${lat}, ${lng}), using fallback:`, err);
-    return '88268562d5fffff';
-  }
+  return latLngToCell(lat, lng, 8);
 }
 
 async function main() {
   console.log('[Seed] Starting database seeding...');
 
   // 1. Password hashing for a default test password
+  // WARNING: This password is for local development only.
+  // Never use this credential in staging or production.
   const defaultPassword = 'password123';
   const passwordHash = await bcrypt.hash(defaultPassword, 12);
 
@@ -133,7 +127,7 @@ async function main() {
   const demoUserIds = demoUsers.map(u => u.id);
 
   console.log('[Seed] Cleaning up any existing demo records for idempotency...');
-  
+
   await prisma.post.deleteMany({
     where: { id: { in: demoPostIds } },
   });
