@@ -6,6 +6,7 @@ import { PostsModule } from './posts/posts.module.js';
 import { SocialModule } from './social/social.module.js';
 import { GatewayModule } from './gateway/gateway.module.js';
 import { WorkerModule } from './worker/worker.module.js';
+import { ModerationModule } from './moderation/moderation.module.js';
 import { SanitizerInterceptor } from './common/interceptors/sanitizer.interceptor.js';
 
 @Module({
@@ -20,6 +21,7 @@ import { SanitizerInterceptor } from './common/interceptors/sanitizer.intercepto
     SocialModule,
     GatewayModule,
     WorkerModule,
+    ModerationModule,
   ],
   providers: [
     // Bind Global Rate Limiting Guard

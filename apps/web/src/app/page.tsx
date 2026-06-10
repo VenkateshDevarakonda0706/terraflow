@@ -9,6 +9,7 @@ import {
   LocateFixed,
   MapPin,
   Search,
+  Shield,
   Sparkles,
   Upload,
   User,
@@ -18,6 +19,7 @@ import type { CesiumGlobeHandle, GlobePin } from '@/components/globe/CesiumGlobe
 import PostModal from '@/components/PostModal';
 import MemoryCard from '@/components/MemoryCard';
 import ProfilePanel from '@/components/ProfilePanel';
+import ModerationPanel from '@/components/ModerationPanel';
 
 const CesiumGlobe = dynamic(() => import('@/components/globe/CesiumGlobe'), { ssr: false });
 
@@ -97,6 +99,7 @@ export default function HomePage() {
   const [showPostModal, setShowPostModal] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showModeration, setShowModeration] = useState(false);
 
   const featuredPins = useMemo<GlobePin[]>(() => (
     FEATURED_MEMORIES.map(memory => ({
@@ -291,6 +294,7 @@ export default function HomePage() {
     setAuthState('guest');
     setShowProfile(false);
     setShowAuth(false);
+    setShowModeration(false);
   }
 
   function navigate(action: NavAction) {
@@ -298,6 +302,7 @@ export default function HomePage() {
     if (action === 'explore') {
       setShowNotifications(false);
       setShowProfile(false);
+      setShowModeration(false);
       globeRef.current?.flyTo(20, 10, 10500000);
     }
     if (action === 'upload') {
@@ -438,6 +443,12 @@ export default function HomePage() {
             {currentUser?.name || currentUser?.username || 'Profile'}
           </button>
         )}
+        {authState === 'authenticated' && (currentUser?.role === 'ADMIN' || currentUser?.role === 'MODERATOR') && (
+          <button className="tf-pill" onClick={() => setShowModeration(true)}>
+            <Shield size={15} />
+            Moderation
+          </button>
+        )}
         <button className="tf-pill" onClick={authState === 'authenticated' ? handleLogout : () => setShowAuth(true)}>
           {authState === 'authenticated' ? 'Sign out' : 'Sign in'}
         </button>
@@ -572,6 +583,13 @@ export default function HomePage() {
             setShowProfile(false);
           }}
           onProfileUpdated={updated => setCurrentUser((user: any) => ({ ...user, ...updated }))}
+        />
+      )}
+
+      {showModeration && (
+        <ModerationPanel
+          token={getToken() || ''}
+          onClose={() => setShowModeration(false)}
         />
       )}
 

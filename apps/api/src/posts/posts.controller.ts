@@ -104,4 +104,15 @@ export class PostsController {
   async deleteOne(@Req() req: any, @Param('id') id: string) {
     return this.postsService.deletePost(id, req.user.id);
   }
+
+  // ── Report post (authenticated) ───────────────────────────────────────────
+  @Post(':id/report')
+  @UseGuards(AuthGuard('jwt'))
+  async report(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+  ) {
+    return this.postsService.reportPost(id, req.user.id, reason);
+  }
 }
