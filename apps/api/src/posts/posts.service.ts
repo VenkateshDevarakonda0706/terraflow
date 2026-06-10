@@ -42,6 +42,7 @@ export type ExploreResponse = ClustersResponse | PostsResponse;
 
 @Injectable()
 export class PostsService {
+  private geocodeCache = new Map<string, { city: string; country: string }>();
   
   private getH3Resolution(zoomLevel: number): number {
     if (zoomLevel <= 3) return 2;      // Country/Continent clusters
@@ -385,14 +386,42 @@ export class PostsService {
     const stats = await prisma.travelStats.findUnique({ where: { userId } });
     if (!stats) return;
 
-    const newCity = lat > 20 ? 'Mumbai' : 'Paris';
-    const newCountry = lat > 20 ? 'IN' : 'FR';
+    const cacheKey = `${lat.toFixed(2)}_${lng.toFixed(2)}`;
+    let location = this.geocodeCache.get(cacheKey);
+
+    if (!location) {
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`;
+        const response = await fetch(url, {
+          headers: { 'User-Agent': 'TerraFlow-App/1.0' },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const address = data?.address;
+          if (address) {
+            const city = address.city || address.town || address.village || address.suburb;
+            const country = address.country_code ? address.country_code.toUpperCase() : undefined;
+            if (city && country) {
+              location = { city, country };
+              this.geocodeCache.set(cacheKey, location);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Geocoding API request failed:', err);
+      }
+    }
+
+    if (!location || !location.city || !location.country) {
+      console.warn(`Geocoding failed for coordinates: ${lat}, ${lng}. Travel stats unchanged.`);
+      return;
+    }
 
     const cities = new Set(stats.citiesVisited);
     const countries = new Set(stats.countriesVisited);
 
-    cities.add(newCity);
-    countries.add(newCountry);
+    cities.add(location.city);
+    countries.add(location.country);
 
     const badges = new Set(stats.unlockedBadges);
     if (countries.size >= 5) badges.add('GLOBETROTTER');
