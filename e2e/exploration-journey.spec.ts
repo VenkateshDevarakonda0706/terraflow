@@ -367,7 +367,7 @@ test('guest search shows empty state when no results are found', async ({ page }
   await page.getByPlaceholder('Search a city, landmark, or memory...').fill('zzzz-not-a-real-location-12345');
 
   // Verify the empty state message with exploration tone is visible
-  const emptyState = page.getByRole('status');
+  const emptyState = page.locator('.tf-search-results').getByRole('status');
   await expect(emptyState).toBeVisible();
   await expect(emptyState).toContainText('The globe is silent here. Try another place or memory.');
 });

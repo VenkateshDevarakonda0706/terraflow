@@ -486,13 +486,17 @@ export default function HomePage() {
               )}
             </div>
           )}
-          {!searching && searchQuery.trim() && locationResults.length === 0 && memoryResults.length === 0 && (
-            <div className="tf-search-results">
-              <div className="tf-orbit-card" role="status" aria-live="polite" style={{ width: '100%', padding: '14px 16px', borderRadius: 18 }}>
-                <p style={{ margin: 0, color: 'var(--tf-muted)' }}>The globe is silent here. Try another place or memory.</p>
-              </div>
+          <div className="tf-search-results" style={{ marginTop: (!searching && searchQuery.trim() && locationResults.length === 0 && memoryResults.length === 0) ? '10px' : '0px' }}>
+            <div role="status" aria-live="polite" aria-atomic="true" style={{ width: '100%' }}>
+              {!searching && searchQuery.trim() && locationResults.length === 0 && memoryResults.length === 0 && (
+                <div className="tf-orbit-card" style={{ width: '100%', padding: '14px 16px', borderRadius: 18 }}>
+                  <p style={{ margin: 0, color: 'var(--tf-muted)' }}>
+                    The globe is silent here. Try another place or memory.
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </section>
       )}
 
