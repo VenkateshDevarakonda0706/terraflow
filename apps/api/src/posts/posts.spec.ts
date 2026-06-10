@@ -594,6 +594,122 @@ describe('Terraflow Spatial Engine & Privacy Interceptor Integration Suite', () 
         );
       });
     });
+
+    describe('asyncUpdateTravelStats() geocoding', () => {
+      beforeEach(() => {
+        vi.restoreAllMocks();
+      });
+
+      it('should geocode coordinates to real city and country and update travelStats', async () => {
+        const mockStats = {
+          userId: 'user-1',
+          citiesVisited: ['Paris'],
+          countriesVisited: ['FR'],
+          totalDistanceKm: 100,
+          unlockedBadges: [],
+        };
+        (prisma.travelStats.findUnique as Mock).mockResolvedValue(mockStats);
+        (prisma.travelStats.update as Mock).mockResolvedValue({});
+
+        const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            address: {
+              city: 'Mumbai',
+              country_code: 'in',
+            },
+          }),
+        } as any);
+
+        await (postsService as any).asyncUpdateTravelStats('user-1', 19.076, 72.8777);
+
+        expect(fetchSpy).toHaveBeenCalledWith(
+          expect.stringContaining('nominatim.openstreetmap.org/reverse?lat=19.076&lon=72.8777'),
+          expect.any(Object),
+        );
+        expect(prisma.travelStats.update).toHaveBeenCalledWith({
+          where: { userId: 'user-1' },
+          data: expect.objectContaining({
+            citiesVisited: expect.arrayContaining(['Paris', 'Mumbai']),
+            countriesVisited: expect.arrayContaining(['FR', 'IN']),
+          }),
+        });
+      });
+
+      it('should not update travel stats when address parts are missing', async () => {
+        const mockStats = {
+          userId: 'user-1',
+          citiesVisited: ['Paris'],
+          countriesVisited: ['FR'],
+          totalDistanceKm: 100,
+          unlockedBadges: [],
+        };
+        (prisma.travelStats.findUnique as Mock).mockResolvedValue(mockStats);
+        (prisma.travelStats.update as Mock).mockResolvedValue({});
+
+        vi.spyOn(global, 'fetch').mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            address: {},
+          }),
+        } as any);
+
+        await (postsService as any).asyncUpdateTravelStats('user-1', 0, 0);
+
+        expect(prisma.travelStats.update).not.toHaveBeenCalled();
+      });
+
+      it('should handle API failure gracefully and not update travel stats without throwing', async () => {
+        const mockStats = {
+          userId: 'user-1',
+          citiesVisited: ['Paris'],
+          countriesVisited: ['FR'],
+          totalDistanceKm: 100,
+          unlockedBadges: [],
+        };
+        (prisma.travelStats.findUnique as Mock).mockResolvedValue(mockStats);
+        (prisma.travelStats.update as Mock).mockResolvedValue({});
+
+        vi.spyOn(global, 'fetch').mockRejectedValue(new Error('Network Error'));
+
+        await expect(
+          (postsService as any).asyncUpdateTravelStats('user-1', 10, 20),
+        ).resolves.not.toThrow();
+
+        expect(prisma.travelStats.update).not.toHaveBeenCalled();
+      });
+
+      it('should hit cache on repeated coordinates and avoid secondary fetch calls', async () => {
+        const mockStats = {
+          userId: 'user-1',
+          citiesVisited: ['Paris'],
+          countriesVisited: ['FR'],
+          totalDistanceKm: 100,
+          unlockedBadges: [],
+        };
+        (prisma.travelStats.findUnique as Mock).mockResolvedValue(mockStats);
+        (prisma.travelStats.update as Mock).mockResolvedValue({});
+
+        const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            address: {
+              city: 'Rome',
+              country_code: 'it',
+            },
+          }),
+        } as any);
+
+        // First call - Cache Miss (calls fetch)
+        await (postsService as any).asyncUpdateTravelStats('user-1', 41.9028, 12.4964);
+
+        // Second call - Cache Hit (should skip fetch)
+        await (postsService as any).asyncUpdateTravelStats('user-1', 41.9028, 12.4964);
+
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
+        expect(prisma.travelStats.update).toHaveBeenCalledTimes(2);
+      });
+    });
   });
 });
 
