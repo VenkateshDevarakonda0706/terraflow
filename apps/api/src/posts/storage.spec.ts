@@ -46,4 +46,14 @@ describe('StorageService EXIF GPS Extraction', () => {
     expect(result).toBeNull();
     expect(exifr.gps).toHaveBeenCalledWith(buffer);
   });
+
+  it('should return null for out-of-range GPS coordinates', async () => {
+    (exifr.gps as Mock).mockResolvedValue({ latitude: 999, longitude: 999 });
+
+    const buffer = Buffer.from('mock-image-data-invalid-gps');
+    const result = await storageService.extractExifGPS(buffer);
+
+    expect(result).toBeNull();
+    expect(exifr.gps).toHaveBeenCalledWith(buffer);
+  });
 });
