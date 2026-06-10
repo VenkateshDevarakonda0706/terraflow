@@ -530,7 +530,7 @@ export default function HomePage() {
           <strong>Explore by orbit</strong>
           <p>Drag the planet, search a place, or select a memory. TerraFlow stays out of the way until a story matters.</p>
         </div>
-        <button className="tf-icon-button" title="Return to global view" aria-label="Return to global view" onClick={() => globeRef.current?.flyTo(20, 10, 10500000)}>
+        <button className="tf-icon-button" aria-label="Return to global view" onClick={() => globeRef.current?.flyTo(20, 10, 10500000)}>
           <LocateFixed size={18} />
         </button>
       </aside>
