@@ -27,4 +27,56 @@ describe('MemoryCard', () => {
     expect(screen.getByText('No photo attached')).toBeInTheDocument();
     expect(screen.getByText('A quiet coastline')).toBeInTheDocument();
   });
+
+  it('renders the attached image with descriptive alt text containing title and location', () => {
+    render(
+      <MemoryCard
+        post={{
+          id: 'memory-2',
+          title: 'Sunset Beach',
+          latitude: 34.0522,
+          longitude: -118.2437,
+          location: 'Malibu, CA',
+          visibility: 'PUBLIC',
+          createdAt: '2026-06-02T00:00:00.000Z',
+          user: { name: 'Terra' },
+          media: [{ url: 'https://example.com/beach.jpg' }],
+          _count: { likes: 0 },
+        }}
+        token=""
+        onClose={vi.fn()}
+        onDelete={vi.fn()}
+        onFlyTo={vi.fn()}
+      />
+    );
+
+    const img = screen.getByRole('img');
+    expect(img).toHaveAttribute('alt', 'Sunset Beach at Malibu, CA');
+  });
+
+  it('renders coordinate fallback alt text when location is missing', () => {
+    render(
+      <MemoryCard
+        post={{
+          id: 'memory-3',
+          title: 'Mountain View',
+          latitude: 12.3456,
+          longitude: 78.9012,
+          location: null,
+          visibility: 'PUBLIC',
+          createdAt: '2026-06-02T00:00:00.000Z',
+          user: { name: 'Terra' },
+          media: [{ url: 'https://example.com/mountain.jpg' }],
+          _count: { likes: 0 },
+        }}
+        token=""
+        onClose={vi.fn()}
+        onDelete={vi.fn()}
+        onFlyTo={vi.fn()}
+      />
+    );
+
+    const img = screen.getByRole('img');
+    expect(img).toHaveAttribute('alt', 'Mountain View at 12.346, 78.901');
+  });
 });
