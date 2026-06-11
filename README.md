@@ -35,9 +35,10 @@ skills/             TerraFlow project review and QA instructions
 
 The user journey should keep Earth as the primary surface. Guests can explore first; account creation appears only when a user uploads, saves, follows, or manages a profile.
 
-## Design System
+## Design System & Performance
 
-For styling guidelines, typography, color tokens, and core components, see the [TerraFlow Design System](docs/terraflow-design-system.md).
+- For styling guidelines, typography, color tokens, and core components, see the [TerraFlow Design System](docs/terraflow-design-system.md).
+- For performance budgets, loading metrics, and Cesium lazy-loading details, see the [Performance Budgets & Cesium Loading Guide](docs/performance.md).
 
 All contributions should align with these core user experience principles:
 

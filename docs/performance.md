@@ -15,20 +15,33 @@ To preserve a fast, lightweight, globe-first experience, the following budgets m
 
 ---
 
-## 2. Current Baseline Measurements
+## 2. Budget Violation Response
+
+If a pull request or proposed change violates the route performance budgets:
+
+1. **Analyze Chunk Size**: Check the Next.js build console output, which details individual route chunk sizes and shared dependencies.
+2. **Implement Lazy Loading**: Apply dynamic imports via `next/dynamic` with `ssr: false` for client-only widgets or heavy components.
+3. **Isolate Heavy Imports**: Do not import Cesium or heavy libraries inside core layouts or components that load before runtime page mount.
+4. **Audit Dependencies**: Ensure third-party utilities are tree-shaken and loaded on-demand.
+
+---
+
+## 3. Current Baseline Measurements
 
 The following baseline metrics were collected using a production build compilation on **2026-06-11**:
 
-| Route (app) | Size | First Load JS |
+| Route (app) | Page Size | First Load JS |
 | :--- | :--- | :--- |
 | `/` (Homepage) | 13.9 kB | 116 kB |
 | `/u/[username]` (Profile Page) | 4.09 kB | 107 kB |
 
 * **Shared JS (all routes)**: 102 kB
 
+*Note: Next.js production build output is the primary mechanism to inspect route bundles, individual page sizes, and shared JavaScript chunks across workspaces.*
+
 ---
 
-## 3. Cesium Loading Strategy
+## 4. Cesium Loading Strategy
 
 The NestJS-Next.js monorepo architecture applies a multi-layered deferred loading mechanism to isolate Cesium's heavy bundle size from initial page loads:
 
@@ -47,7 +60,7 @@ The NestJS-Next.js monorepo architecture applies a multi-layered deferred loadin
 
 ---
 
-## 4. Validation Procedure for Contributors
+## 5. Validation Procedure for Contributors
 
 Before opening a pull request, verify that changes conform to performance budgets.
 
@@ -67,7 +80,7 @@ Open your browser's Developer Tools network panel, navigate to `http://localhost
 
 ---
 
-## 5. Manual Verification
+## 6. Manual Verification
 
 ### Desktop Verification
 1. Run `npm run start --workspace=apps/web`.
