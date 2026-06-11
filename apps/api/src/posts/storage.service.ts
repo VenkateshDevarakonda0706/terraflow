@@ -47,13 +47,18 @@ export class StorageService implements OnModuleInit {
     // Validate File Types
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4'];
     if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Unsupported file format. Upload JPEGs, PNGs, WEBPs, or MP4s only.');
+      throw new BadRequestException('Unsupported file format. Please upload JPEG, PNG, WEBP images, or MP4 videos only.');
     }
 
     // Validate size boundaries (10MB images, 50MB videos)
-    const limit = file.mimetype.startsWith('video') ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    const isVideo = file.mimetype.startsWith('video');
+    const limit = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.buffer.length > limit) {
-      throw new BadRequestException(`File size exceeds limit (${limit / (1024 * 1024)}MB).`);
+      if (isVideo) {
+        throw new BadRequestException('Video size exceeds the limit of 50MB.');
+      } else {
+        throw new BadRequestException('Image size exceeds the limit of 10MB.');
+      }
     }
 
     const fileExt = path.extname(file.originalname);
