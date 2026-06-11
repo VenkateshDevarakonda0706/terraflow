@@ -164,7 +164,7 @@ export default function ProfilePanel({ user, token, onClose, onPinClick, onProfi
         {!postsLoaded
           ? <div style={{ textAlign: 'center', padding: 20, opacity: 0.3, fontSize: 12 }}>Loading...</div>
           : posts.length === 0
-            ? <div style={{ textAlign: 'center', padding: 20, opacity: 0.3, fontSize: 12 }}>No memories yet — click + to pin your first!</div>
+            ? <div style={{ textAlign: 'center', padding: 20, opacity: 0.3, fontSize: 12 }}>No memories yet — explore the globe and pin your first memory.</div>
             : (
               <div style={s.postGrid}>
                 {posts.map((p: any) => (

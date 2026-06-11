@@ -140,7 +140,7 @@ export default function PublicProfile({ user, onFlyTo, onClose }: PublicProfileP
 
         {posts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 20, opacity: 0.3, fontSize: 12 }}>
-            No public memories yet.
+            No public memories yet — this explorer hasn't pinned any stories to the globe.
           </div>
         ) : (
           <div style={{

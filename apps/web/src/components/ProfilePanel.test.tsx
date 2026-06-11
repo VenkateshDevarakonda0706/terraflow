@@ -34,6 +34,6 @@ describe('ProfilePanel', () => {
       />
     );
 
-    await waitFor(() => expect(screen.getByText(/no memories yet/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/explore the globe and pin/i)).toBeInTheDocument());
   });
 });
