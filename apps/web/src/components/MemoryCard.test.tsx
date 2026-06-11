@@ -53,4 +53,30 @@ describe('MemoryCard', () => {
     const img = screen.getByRole('img');
     expect(img).toHaveAttribute('alt', 'Sunset Beach at Malibu, CA');
   });
+
+  it('renders coordinate fallback alt text when location is missing', () => {
+    render(
+      <MemoryCard
+        post={{
+          id: 'memory-3',
+          title: 'Mountain View',
+          latitude: 12.3456,
+          longitude: 78.9012,
+          location: null,
+          visibility: 'PUBLIC',
+          createdAt: '2026-06-02T00:00:00.000Z',
+          user: { name: 'Terra' },
+          media: [{ url: 'https://example.com/mountain.jpg' }],
+          _count: { likes: 0 },
+        }}
+        token=""
+        onClose={vi.fn()}
+        onDelete={vi.fn()}
+        onFlyTo={vi.fn()}
+      />
+    );
+
+    const img = screen.getByRole('img');
+    expect(img).toHaveAttribute('alt', 'Mountain View at 12.346, 78.901');
+  });
 });
