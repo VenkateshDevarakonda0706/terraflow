@@ -17,6 +17,21 @@ All route paths documented below are relative to this base URL.
 
 ---
 
+## Pagination Fields
+
+All paginated endpoints return a consistent set of pagination metadata in their responses:
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `total` | number | Total number of matching records (from a `COUNT` query) |
+| `page` | number | Current page number (1-indexed) |
+| `limit` | number | Maximum number of records returned per page |
+| `hasMore` | boolean | `true` if there are additional pages beyond the current one |
+
+**`hasMore` is computed as:** `skip + limit < total` where `skip = (page - 1) * limit`.
+
+---
+
 ## Authentication
 
 TerraFlow uses JWT/cookie-based session persistence.
@@ -67,6 +82,36 @@ Endpoints mapping to `/posts` handling spatial memories and their lifecycles.
 | `GET` | `/posts/:id` | Optional | Retrieves a single memory post by its ID, respecting visibility rules. |
 | `DELETE` | `/posts/:id` | Yes (JWT) | Deletes a memory post by ID. Restricted to the owner of the post. |
 | `POST` | `/posts/:id/report` | Yes (JWT) | Reports a post for moderation review with a specified `reason`. |
+
+#### GET /posts/timeline Query Parameters
+
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `lat` | number | **Yes** | Latitude of center coordinate. |
+| `lng` | number | **Yes** | Longitude of center coordinate. |
+| `radius` | number | No | Search radius in kilometers (defaults to `5`). |
+
+**Response**: Returns an array of timeline groups categorized by year:
+
+```json
+[
+  {
+    "year": "2026",
+    "count": 1,
+    "posts": [
+      {
+        "id": "post-uuid",
+        "title": "Kyoto Path",
+        "description": "Rain on the old stone path",
+        "latitude": 35.0116,
+        "longitude": 135.7681,
+        "createdAt": "2026-06-11T12:00:00.000Z",
+        "media": []
+      }
+    ]
+  }
+]
+```
 
 ### 4. Social Graph
 
