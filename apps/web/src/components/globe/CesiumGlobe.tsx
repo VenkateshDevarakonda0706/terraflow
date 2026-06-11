@@ -243,7 +243,6 @@ const CesiumGlobe = forwardRef<CesiumGlobeHandle, Props>(function CesiumGlobe(
         });
         viewerRef.current = viewer;
         syncPins(Cesium, viewer, pinsRef.current);
-        setIsLoading(false);
 
         // Click handler — distinguishes pin clicks from globe clicks
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -287,6 +286,10 @@ const CesiumGlobe = forwardRef<CesiumGlobeHandle, Props>(function CesiumGlobe(
           };
           rafRef.current = requestAnimationFrame(spin);
         }
+
+        if (mounted) {
+          setIsLoading(false);
+        }
       } catch (err) {
         console.warn('[CesiumGlobe] init error:', err);
         if (mounted) setIsLoading(false);
@@ -319,11 +322,20 @@ const CesiumGlobe = forwardRef<CesiumGlobeHandle, Props>(function CesiumGlobe(
 
   return (
     <div className="tf-globe-container">
-      <div ref={containerRef} style={{ width: '100%', height: '100%', background: '#050510' }} />
+      <div ref={containerRef} style={{ width: '100%', height: '100%', background: 'var(--tf-bg)' }} />
       {isLoading && (
-        <div className="tf-globe-loader">
-          <div className="tf-globe-loader-spinner" />
-          <div className="tf-globe-loader-text">Initializing Map Layer</div>
+        <div
+          className="tf-globe-loader"
+          role="status"
+          aria-label="Loading map"
+        >
+          <div
+            className="tf-globe-loader-spinner"
+            aria-hidden="true"
+          />
+          <div className="tf-globe-loader-text">
+            Initializing Map Layer
+          </div>
         </div>
       )}
     </div>
