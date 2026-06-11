@@ -180,7 +180,17 @@ const CesiumGlobe = forwardRef<CesiumGlobeHandle, Props>(function CesiumGlobe(
             if (!entityMap.current.has(pin.id) || !entity.billboard) return;
             entity.billboard.image = canvas;
           })
-          .catch(() => {});
+          .catch(() => {
+            if (!entityMap.current.has(pin.id) || !entity.billboard) return;
+            entity.billboard.width = pin.count && pin.count > 1 ? 44 : 36;
+            entity.billboard.height = pin.count && pin.count > 1 ? 44 : 36;
+            entity.billboard.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
+            entity.billboard.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
+            entity.position = Cesium.Cartesian3.fromDegrees(pin.lng, pin.lat, 0);
+            if (entity.point) {
+              entity.point = undefined;
+            }
+          });
       }
     });
   }
