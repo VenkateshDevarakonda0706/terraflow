@@ -49,7 +49,7 @@ All contributions should align with these core user experience principles:
 
 Contributor screenshots should be stored in:
 
-docs/screenshots/
+`docs/screenshots/`
 
 Expected screenshot files:
 
@@ -60,7 +60,7 @@ Expected screenshot files:
 
 For capture requirements, viewport recommendations, and naming conventions, see:
 
-docs/screenshots/README.md
+[docs/screenshots/README.md](docs/screenshots/README.md)
 
 ## Prerequisites
 

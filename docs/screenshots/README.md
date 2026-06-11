@@ -1,5 +1,8 @@
 # Screenshot Guide
 
+> [!NOTE]
+> The screenshot files listed below are expected capture targets and are not currently committed to the repository. Contributors should capture these screenshots locally when needed for documentation, manual QA, or pull request descriptions.
+
 ## Required Screenshots
 
 | Filename | Description |
@@ -28,12 +31,16 @@
 * Avoid browser bookmarks and personal information.
 * Keep the globe visible whenever possible.
 * Use PNG format.
-* Save screenshots in docs/screenshots/.
+* Save screenshots in `docs/screenshots/`.
 
-## Directory Structure
+## Target Directory Structure (Example)
 
+Below is an example of the target directory structure after capturing the screenshots locally:
+
+```text
 docs/screenshots/
 ├── globe-home-desktop.png
 ├── globe-home-mobile.png
 ├── upload-memory.png
 └── profile-panel.png
+```
