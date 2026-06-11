@@ -39,6 +39,10 @@ The user journey should keep Earth as the primary surface. Guests can explore fi
 
 For styling guidelines, typography, color tokens, and core components, see the [TerraFlow Design System](docs/terraflow-design-system.md).
 
+## API Documentation
+
+For a complete overview of the backend REST endpoints, query parameters, payload shapes, and authentication requirements, see the [API Documentation](docs/api.md).
+
 All contributions should align with these core user experience principles:
 
 - **Globe-First Experience**: Keep the 3D globe central; controls should support exploration without competing for attention.
