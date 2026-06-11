@@ -45,6 +45,23 @@ All contributions should align with these core user experience principles:
 - **Exploration Before Login**: Allow users to explore public content before authentication. Require login only when necessary for interaction or creation.
 - **Lightweight Uploads**: Keep publishing workflows fast and simple with minimal friction.
 
+## Screenshots
+
+Contributor screenshots should be stored in:
+
+docs/screenshots/
+
+Expected screenshot files:
+
+- globe-home-desktop.png
+- globe-home-mobile.png
+- upload-memory.png
+- profile-panel.png
+
+For capture requirements, viewport recommendations, and naming conventions, see:
+
+docs/screenshots/README.md
+
 ## Prerequisites
 
 - Node.js 18 or newer
