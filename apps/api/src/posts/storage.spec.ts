@@ -1,12 +1,22 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { StorageService } from './storage.service.js';
 import exifr from 'exifr';
+import * as fs from 'fs';
+import { writeFileSync } from 'fs';
 
 vi.mock('exifr', () => ({
   default: {
     gps: vi.fn(),
   },
 }));
+
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
+  return {
+    ...actual,
+    writeFileSync: vi.fn(),
+  };
+});
 
 describe('StorageService EXIF GPS Extraction', () => {
   let storageService: StorageService;
@@ -55,5 +65,63 @@ describe('StorageService EXIF GPS Extraction', () => {
 
     expect(result).toBeNull();
     expect(exifr.gps).toHaveBeenCalledWith(buffer);
+  });
+});
+
+describe('StorageService File Upload Validation', () => {
+  let storageService: StorageService;
+
+  beforeEach(() => {
+    storageService = new StorageService();
+    storageService.onModuleInit();
+    vi.mocked(writeFileSync).mockClear();
+  });
+
+  it('should reject unsupported MIME type', async () => {
+    const file = {
+      buffer: Buffer.from('mock-data'),
+      originalname: 'test.gif',
+      mimetype: 'image/gif',
+    };
+    await expect(storageService.uploadFile(file)).rejects.toThrowError(
+      'Unsupported file format. Please upload JPEG, PNG, WEBP images, or MP4 videos only.'
+    );
+  });
+
+  it('should reject image larger than 10MB', async () => {
+    const largeBuffer = Buffer.alloc(10 * 1024 * 1024 + 1);
+    const file = {
+      buffer: largeBuffer,
+      originalname: 'large-image.png',
+      mimetype: 'image/png',
+    };
+    await expect(storageService.uploadFile(file)).rejects.toThrowError(
+      'Image size exceeds the limit of 10MB.'
+    );
+  });
+
+  it('should reject video larger than 50MB', async () => {
+    const largeBuffer = Buffer.alloc(50 * 1024 * 1024 + 1);
+    const file = {
+      buffer: largeBuffer,
+      originalname: 'large-video.mp4',
+      mimetype: 'video/mp4',
+    };
+    await expect(storageService.uploadFile(file)).rejects.toThrowError(
+      'Video size exceeds the limit of 50MB.'
+    );
+  });
+
+  it('should successfully upload valid image within limits (local fallback)', async () => {
+    const file = {
+      buffer: Buffer.from('valid-image-data'),
+      originalname: 'valid.png',
+      mimetype: 'image/png',
+    };
+
+    const url = await storageService.uploadFile(file);
+    // Uploaded files are served from the public /uploads route.
+    expect(url).toContain('/uploads/');
+    expect(writeFileSync).toHaveBeenCalled();
   });
 });

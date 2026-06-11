@@ -39,3 +39,6 @@ export const TRAVEL_BADGES = {
 } as const;
 
 export type TravelBadgeId = keyof typeof TRAVEL_BADGES;
+
+export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4'] as const;
+

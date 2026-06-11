@@ -3,6 +3,7 @@ import { Storage } from '@google-cloud/storage';
 import exifr from 'exifr';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ALLOWED_MIME_TYPES } from '@terraflow/shared';
 
 @Injectable()
 export class StorageService implements OnModuleInit {
@@ -45,15 +46,19 @@ export class StorageService implements OnModuleInit {
 
   async uploadFile(file: { buffer: Buffer; originalname: string; mimetype: string }): Promise<string> {
     // Validate File Types
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4'];
-    if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Unsupported file format. Upload JPEGs, PNGs, WEBPs, or MP4s only.');
+    if (!(ALLOWED_MIME_TYPES as readonly string[]).includes(file.mimetype)) {
+      throw new BadRequestException('Unsupported file format. Please upload JPEG, PNG, WEBP images, or MP4 videos only.');
     }
 
     // Validate size boundaries (10MB images, 50MB videos)
-    const limit = file.mimetype.startsWith('video') ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    const isVideo = file.mimetype.startsWith('video');
+    const limit = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.buffer.length > limit) {
-      throw new BadRequestException(`File size exceeds limit (${limit / (1024 * 1024)}MB).`);
+      if (isVideo) {
+        throw new BadRequestException('Video size exceeds the limit of 50MB.');
+      } else {
+        throw new BadRequestException('Image size exceeds the limit of 10MB.');
+      }
     }
 
     const fileExt = path.extname(file.originalname);
