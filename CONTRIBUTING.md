@@ -29,6 +29,20 @@ npm.cmd install
 npm.cmd run build
 ```
 
+## Local Upload Files
+
+When running the API locally, uploaded files may be created under `apps/api/public/uploads/`.
+
+These files are development artifacts and should not be committed to Git. The repository's `.gitignore` is configured to ignore newly generated upload files.
+
+If you want to remove local upload artifacts, you can safely delete untracked files in the uploads directory:
+
+```bash
+git clean -fdX apps/api/public/uploads
+```
+
+Do not remove or modify any tracked files in this directory unless requested by a maintainer.
+
 ## Branch Naming
 
 Use short, descriptive branch names:
