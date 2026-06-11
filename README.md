@@ -68,21 +68,49 @@ Edit `.env` with local values. At minimum, set `DATABASE_URL`, `JWT_SECRET`, and
 
 ## Environment Variables
 
-| Variable                         | Required | Description                                                       |
-| -------------------------------- | -------- | ----------------------------------------------------------------- |
-| `PORT`                           | Yes      | API port, usually `4000`.                                         |
-| `CLIENT_URL`                     | Yes      | Web origin, usually `http://localhost:3000`.                      |
-| `DATABASE_URL`                   | Yes      | PostgreSQL connection string for Prisma.                          |
-| `JWT_SECRET`                     | Yes      | Access token signing secret. Use a long random value.             |
-| `JWT_REFRESH_SECRET`             | Yes      | Refresh token signing secret. Use a different long random value.  |
-| `NEXT_PUBLIC_API_URL`            | No       | Web app API base URL. Defaults to `http://localhost:4000/api/v1`. |
-| `GOOGLE_CLIENT_ID`               | No       | Google OAuth client ID.                                           |
-| `GOOGLE_CLIENT_SECRET`           | No       | Google OAuth client secret.                                       |
-| `GOOGLE_CALLBACK_URL`            | No       | Google OAuth callback URL.                                        |
-| `GOOGLE_APPLICATION_CREDENTIALS` | No       | Path to a GCS service account JSON file.                          |
-| `GCS_BUCKET_NAME`                | No       | Google Cloud Storage bucket name.                                 |
-| `API_PUBLIC_URL`                 | No       | Public API origin used for local upload URLs.                     |
-| `REDIS_URL`                      | No       | Redis connection string for worker features.                      |
+### Required Local Development
+
+| Variable             | Required | Description                                                      |
+| :------------------- | :------- | :--------------------------------------------------------------- |
+| `PORT`               | **Yes**  | API port, usually `4000`.                                        |
+| `NODE_ENV`           | **Yes**  | Environment mode (e.g., `development`, `production`, `test`).    |
+| `CLIENT_URL`         | **Yes**  | Web origin, usually `http://localhost:3000`.                     |
+| `DATABASE_URL`       | **Yes**  | PostgreSQL connection string for Prisma.                         |
+| `JWT_SECRET`         | **Yes**  | Access token signing secret. Use a long random value.            |
+| `JWT_REFRESH_SECRET` | **Yes**  | Refresh token signing secret. Use a different long random value. |
+
+### Optional Client/Server URLs
+
+| Variable              | Required | Description                                                       |
+| :-------------------- | :------- | :---------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL` | No       | Web app API base URL. Defaults to `http://localhost:4000/api/v1`. |
+| `API_PUBLIC_URL`      | No       | Public API origin used for local upload URLs.                     |
+
+### Optional OAuth Variables
+
+| Variable               | Required | Description                                        |
+| :--------------------- | :------- | :------------------------------------------------- |
+| `GOOGLE_CLIENT_ID`     | No       | Google OAuth client ID.                            |
+| `GOOGLE_CLIENT_SECRET` | No       | Google OAuth client secret.                        |
+| `GOOGLE_CALLBACK_URL`  | No       | Google OAuth callback URL.                         |
+| `APPLE_CLIENT_ID`      | No       | Apple Developer Services Client ID.                |
+| `APPLE_TEAM_ID`        | No       | Apple Developer Team ID.                           |
+| `APPLE_KEY_ID`         | No       | Apple Developer Key ID.                            |
+| `APPLE_PRIVATE_KEY`    | No       | Apple Developer private key contents.              |
+| `APPLE_CALLBACK_URL`   | No       | Redirect URL registered in Apple Developer portal. |
+
+### Optional Storage Variables
+
+| Variable                         | Required | Description                              |
+| :------------------------------- | :------- | :--------------------------------------- |
+| `GOOGLE_APPLICATION_CREDENTIALS` | No       | Path to a GCS service account JSON file. |
+| `GCS_BUCKET_NAME`                | No       | Google Cloud Storage bucket name.        |
+
+### Optional Worker Variables
+
+| Variable    | Required | Description                                  |
+| :---------- | :------- | :------------------------------------------- |
+| `REDIS_URL` | No       | Redis connection string for worker features. |
 
 ## Database Setup
 
