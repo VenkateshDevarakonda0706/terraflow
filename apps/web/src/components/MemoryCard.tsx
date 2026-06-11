@@ -47,7 +47,7 @@ export default function MemoryCard({ post, currentUserId, token, onClose, onDele
 
       <div className="tf-memory-media">
         {image ? (
-          <img src={image} alt={post.title} />
+          <img src={image} alt={`${post.title || 'Memory'} at ${location}`} />
         ) : (
           <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--tf-muted)' }}>
             No photo attached
