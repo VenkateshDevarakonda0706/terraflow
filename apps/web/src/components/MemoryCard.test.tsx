@@ -28,8 +28,8 @@ describe('MemoryCard', () => {
     expect(screen.getByText('A quiet coastline')).toBeInTheDocument();
   });
 
-  it('renders fallback state when image fails to load', () => {
-    render(
+  it('renders fallback state when image fails to load and resets error on post change', () => {
+    const { rerender } = render(
       <MemoryCard
         post={{
           id: 'memory-2',
@@ -49,14 +49,43 @@ describe('MemoryCard', () => {
       />
     );
 
-    const img = screen.getByRole('img');
+    const img = screen.getByRole('img', { name: 'A quiet coastline' });
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute('src', 'https://example.com/failed-image.jpg');
 
     // Simulate image error
     fireEvent.error(img);
 
-    expect(screen.getByText('Photo unavailable')).toBeInTheDocument();
-    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    // Verify accessible fallback UI is rendered with role="img" and matching label
+    const fallback = screen.getByRole('img', { name: 'Photo unavailable' });
+    expect(fallback).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'A quiet coastline' })).not.toBeInTheDocument();
+
+    // Rerender with a different post
+    rerender(
+      <MemoryCard
+        post={{
+          id: 'memory-3',
+          title: 'A busy city',
+          latitude: 40.7128,
+          longitude: -74.0060,
+          visibility: 'PUBLIC',
+          createdAt: '2026-06-02T00:00:00.000Z',
+          user: { name: 'Terra' },
+          _count: { likes: 0 },
+          media: [{ url: 'https://example.com/new-image.jpg' }],
+        }}
+        token=""
+        onClose={vi.fn()}
+        onDelete={vi.fn()}
+        onFlyTo={vi.fn()}
+      />
+    );
+
+    // Verify error state is reset and new image is rendering
+    const newImg = screen.getByRole('img', { name: 'A busy city' });
+    expect(newImg).toBeInTheDocument();
+    expect(newImg).toHaveAttribute('src', 'https://example.com/new-image.jpg');
+    expect(screen.queryByRole('img', { name: 'Photo unavailable' })).not.toBeInTheDocument();
   });
 });

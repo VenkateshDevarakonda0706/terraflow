@@ -188,7 +188,7 @@ const CesiumGlobe = forwardRef<CesiumGlobeHandle, Props>(function CesiumGlobe(
             entity.billboard.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
             entity.position = Cesium.Cartesian3.fromDegrees(pin.lng, pin.lat, 0);
             if (entity.point) {
-              entity.point = undefined;
+              entity.point.show = false as any;
             }
           });
       }
