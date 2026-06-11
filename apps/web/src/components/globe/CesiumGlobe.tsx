@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from 'react';
 
 if (typeof window !== 'undefined') {
   (window as any).CESIUM_BASE_URL = '/cesium';
@@ -124,6 +124,7 @@ const CesiumGlobe = forwardRef<CesiumGlobeHandle, Props>(function CesiumGlobe(
   const handlerRef   = useRef<any>(null);
   const rafRef       = useRef<number>(0);
   const pinsRef      = useRef<GlobePin[]>(pins);
+  const [isLoading, setIsLoading] = useState(true);
 
   pinsRef.current = pins;
 
@@ -242,6 +243,7 @@ const CesiumGlobe = forwardRef<CesiumGlobeHandle, Props>(function CesiumGlobe(
         });
         viewerRef.current = viewer;
         syncPins(Cesium, viewer, pinsRef.current);
+        setIsLoading(false);
 
         // Click handler — distinguishes pin clicks from globe clicks
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -287,9 +289,11 @@ const CesiumGlobe = forwardRef<CesiumGlobeHandle, Props>(function CesiumGlobe(
         }
       } catch (err) {
         console.warn('[CesiumGlobe] init error:', err);
+        if (mounted) setIsLoading(false);
       }
     }).catch(err => {
       console.warn('[CesiumGlobe] load error:', err);
+      if (mounted) setIsLoading(false);
     });
 
     return () => {
@@ -314,7 +318,15 @@ const CesiumGlobe = forwardRef<CesiumGlobeHandle, Props>(function CesiumGlobe(
   }, [pins]);
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', background: '#050510' }} />
+    <div className="tf-globe-container">
+      <div ref={containerRef} style={{ width: '100%', height: '100%', background: '#050510' }} />
+      {isLoading && (
+        <div className="tf-globe-loader">
+          <div className="tf-globe-loader-spinner" />
+          <div className="tf-globe-loader-text">Initializing Map Layer</div>
+        </div>
+      )}
+    </div>
   );
 });
 

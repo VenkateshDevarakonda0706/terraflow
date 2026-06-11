@@ -1048,3 +1048,45 @@ button {
     border-radius: 24px 24px 0 0;
   }
 }
+
+.tf-globe-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.tf-globe-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #02030a;
+  z-index: 10;
+  color: var(--tf-text);
+}
+
+.tf-globe-loader-spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(139, 92, 246, 0.15);
+  border-top-color: var(--tf-accent);
+  border-radius: 50%;
+  animation: tf-globe-spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+.tf-globe-loader-text {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tf-muted);
+}
+
+@keyframes tf-globe-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
