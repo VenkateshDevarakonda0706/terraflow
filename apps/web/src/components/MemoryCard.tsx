@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Calendar, Heart, LocateFixed, MapPin, Trash2, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Heart, ImageOff, LocateFixed, MapPin, Trash2, X } from 'lucide-react';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
@@ -17,6 +17,11 @@ interface Props {
 export default function MemoryCard({ post, currentUserId, token, onClose, onDelete, onFlyTo }: Props) {
   const [liked, setLiked] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [post.id]);
   const isOwner = Boolean(currentUserId && (post.userId === currentUserId || post.user?.id === currentUserId));
   const image = post.media?.[0]?.url;
   const location = post.location || `${Number(post.latitude).toFixed(3)}, ${Number(post.longitude).toFixed(3)}`;
@@ -46,10 +51,19 @@ export default function MemoryCard({ post, currentUserId, token, onClose, onDele
       <button className="tf-close" onClick={onClose} aria-label="Close memory"><X size={17} /></button>
 
       <div className="tf-memory-media">
-        {image ? (
-          <img src={image} alt={`${post.title || 'Memory'} at ${location}`} />
+        {image && !imageError ? (
+          <img src={image} alt={`${post.title || 'Memory'} at ${location}`} onError={() => setImageError(true)} />
+        ) : image ? (
+          <div
+            className="tf-memory-media-fallback"
+            role="img"
+            aria-label="Photo unavailable"
+          >
+            <ImageOff size={24} />
+            <span>Photo unavailable</span>
+          </div>
         ) : (
-          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--tf-muted)' }}>
+          <div className="tf-memory-media-placeholder">
             No photo attached
           </div>
         )}

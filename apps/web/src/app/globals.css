@@ -754,6 +754,29 @@ button {
   transform: scale(1.035);
 }
 
+.tf-memory-media-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--tf-muted);
+  font-size: 13px;
+}
+
+.tf-memory-media-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--tf-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+
 .tf-memory-body {
   padding: 18px;
 }
