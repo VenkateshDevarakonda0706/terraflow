@@ -101,6 +101,8 @@ npm run format:check
 npm run build
 ```
 
+Verify that your changes conform to the [Performance Budgets & Cesium Loading Guide](docs/performance.md).
+
 Run `npm run format` to automatically format files using Prettier before committing.
 
 ## Reporting Security Issues
