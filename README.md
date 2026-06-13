@@ -37,15 +37,37 @@ The user journey should keep Earth as the primary surface. Guests can explore fi
 
 For a detailed mapping between user interface actions and their corresponding REST API routes, controllers, and services, see the [API Route Mapping Guide](docs/architecture.md).
 
-## Design System
+## Design System & Performance
 
-For styling guidelines, typography, color tokens, and core components, see the [TerraFlow Design System](docs/terraflow-design-system.md).
+- For styling guidelines, typography, color tokens, and core components, see the [TerraFlow Design System](docs/terraflow-design-system.md).
+- For performance budgets, loading metrics, and Cesium lazy-loading details, see the [Performance Budgets & Cesium Loading Guide](docs/performance.md).
+
+## API Documentation
+
+For a complete overview of the backend REST endpoints, query parameters, payload shapes, and authentication requirements, see the [API Documentation](docs/api.md).
 
 All contributions should align with these core user experience principles:
 
 - **Globe-First Experience**: Keep the 3D globe central; controls should support exploration without competing for attention.
 - **Exploration Before Login**: Allow users to explore public content before authentication. Require login only when necessary for interaction or creation.
 - **Lightweight Uploads**: Keep publishing workflows fast and simple with minimal friction.
+
+## Screenshots
+
+Contributor screenshots should be stored in:
+
+`docs/screenshots/`
+
+Expected screenshot files:
+
+- globe-home-desktop.png
+- globe-home-mobile.png
+- upload-memory.png
+- profile-panel.png
+
+For capture requirements, viewport recommendations, and naming conventions, see:
+
+[docs/screenshots/README.md](docs/screenshots/README.md)
 
 ## Prerequisites
 

@@ -101,7 +101,27 @@ npm run format:check
 npm run build
 ```
 
+Verify that your changes conform to the [Performance Budgets & Cesium Loading Guide](docs/performance.md).
+
 Run `npm run format` to automatically format files using Prettier before committing.
+
+## Local Upload Files
+
+When running the API locally, uploaded files may be created under `apps/api/public/uploads/`.
+
+These files are development artifacts and should not be committed to Git. The repository's `.gitignore` is configured to ignore newly generated upload files.
+
+If you want to remove local upload artifacts, you can safely preview and delete untracked files in the uploads directory:
+
+```bash
+# Preview what will be deleted first
+git clean -ndX apps/api/public/uploads
+
+# Then delete
+git clean -fdX apps/api/public/uploads
+```
+
+Do not remove or modify any tracked files in this directory unless requested by a maintainer.
 
 ## Reporting Security Issues
 
